@@ -650,7 +650,7 @@ function CartView({ store, settings, cart, cartTotal, onUpdateQuantity }: {
 // Checkout View Component
 function CheckoutView({ store, settings, cart, cartTotal, onClearCart }: {
   store: StoreData;
-  settings: StoreSettings | null;
+  settings: any;
   cart: CartItem[];
   cartTotal: number;
   onClearCart: () => void;
@@ -658,31 +658,105 @@ function CheckoutView({ store, settings, cart, cartTotal, onClearCart }: {
   const navigate = useNavigate();
   const [orderSent, setOrderSent] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState('pix');
+  const [submitting, setSubmitting] = useState(false);
   const [formData, setFormData] = useState({
-    name: '', phone: '', address: '', neighborhood: '', city: '', complement: '', reference: ''
+    name: '', phone: '', email: '', address: '', neighborhood: '', city: '', complement: '', reference: ''
   });
 
   const grandTotal = cartTotal + (settings ? Number(settings.delivery_fee) : 0);
   const isValid = formData.name && formData.phone && formData.address && formData.neighborhood && formData.city;
+  const isMercadoPagoEnabled = settings?.mercadopago_enabled && settings?.mercadopago_public_key;
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!settings?.whatsapp_number) {
-      toast.error('Loja sem WhatsApp configurado');
-      return;
+    if (submitting) return;
+    setSubmitting(true);
+
+    try {
+      // Create order in database first
+      const { data: order, error: orderError } = await supabase
+        .from('orders')
+        .insert({
+          store_id: store.id,
+          customer_name: formData.name,
+          customer_phone: formData.phone,
+          customer_address: formData.address,
+          customer_neighborhood: formData.neighborhood,
+          customer_city: formData.city,
+          customer_complement: formData.complement || null,
+          customer_reference: formData.reference || null,
+          payment_method: paymentMethod,
+          subtotal: cartTotal,
+          delivery_fee: Number(settings?.delivery_fee || 0),
+          total: grandTotal,
+          status: 'pending',
+          payment_status: 'pending'
+        })
+        .select()
+        .single();
+
+      if (orderError) throw orderError;
+
+      // Add order items
+      const orderItems = cart.map(item => ({
+        order_id: order.id,
+        product_id: item.product.id,
+        product_name: item.product.name,
+        quantity: item.quantity,
+        unit_price: Number(item.product.price),
+        total_price: Number(item.product.price) * item.quantity
+      }));
+
+      await supabase.from('order_items').insert(orderItems);
+
+      // If Mercado Pago is enabled and selected
+      if (paymentMethod === 'mercadopago' && isMercadoPagoEnabled) {
+        const paymentResponse = await supabase.functions.invoke('create-payment', {
+          body: {
+            store_id: store.id,
+            order_id: order.id,
+            items: cart.map(item => ({
+              title: item.product.name,
+              quantity: item.quantity,
+              unit_price: Number(item.product.price)
+            })),
+            payer: {
+              name: formData.name,
+              email: formData.email || undefined,
+              phone: formData.phone
+            },
+            delivery_fee: Number(settings?.delivery_fee || 0),
+            redirect_url: `${window.location.origin}/loja/${store.slug}`
+          }
+        });
+
+        if (paymentResponse.data?.init_point) {
+          window.location.href = paymentResponse.data.init_point;
+          return;
+        }
+      }
+
+      // WhatsApp checkout for other methods
+      if (settings?.whatsapp_number) {
+        const paymentLabel = paymentMethod === 'pix' ? 'Pix' : paymentMethod === 'card' ? 'Cartão' : 'Dinheiro';
+        const message = generateWhatsAppMessage(
+          cart.map(i => ({ product: { name: i.product.name, price: Number(i.product.price) }, quantity: i.quantity })),
+          cartTotal,
+          Number(settings.delivery_fee),
+          formData,
+          paymentLabel
+        );
+        window.open(`https://wa.me/${settings.whatsapp_number.replace(/\D/g, '')}?text=${message}`, '_blank');
+      }
+
+      setOrderSent(true);
+      toast.success('Pedido criado com sucesso!');
+    } catch (error) {
+      console.error('Order error:', error);
+      toast.error('Erro ao criar pedido');
+    } finally {
+      setSubmitting(false);
     }
-
-    const paymentLabel = paymentMethod === 'pix' ? 'Pix' : paymentMethod === 'card' ? 'Cartão' : 'Dinheiro';
-    const message = generateWhatsAppMessage(
-      cart.map(i => ({ product: { name: i.product.name, price: Number(i.product.price) }, quantity: i.quantity })),
-      cartTotal,
-      Number(settings.delivery_fee),
-      formData,
-      paymentLabel
-    );
-
-    window.open(`https://wa.me/${settings.whatsapp_number.replace(/\D/g, '')}?text=${message}`, '_blank');
-    setOrderSent(true);
   };
 
   if (orderSent) {
@@ -693,7 +767,7 @@ function CheckoutView({ store, settings, cart, cartTotal, onClearCart }: {
             <MessageCircle className="h-8 w-8 text-primary" />
           </div>
           <h1 className="text-2xl font-bold mb-2">Pedido Enviado!</h1>
-          <p className="text-muted-foreground mb-6">Seu pedido foi enviado para o WhatsApp da loja.</p>
+          <p className="text-muted-foreground mb-6">Seu pedido foi registrado e enviado para a loja.</p>
           <Button onClick={() => { onClearCart(); navigate(`/loja/${store.slug}`); }}>
             Voltar à Loja
           </Button>
@@ -774,20 +848,29 @@ function CheckoutView({ store, settings, cart, cartTotal, onClearCart }: {
                 <CardContent className="p-6 space-y-4">
                   <h2 className="font-bold">Pagamento</h2>
                   <RadioGroup value={paymentMethod} onValueChange={setPaymentMethod}>
+                    {isMercadoPagoEnabled && (
+                      <label className="flex items-center gap-3 p-3 border rounded-lg cursor-pointer hover:bg-muted/50">
+                        <RadioGroupItem value="mercadopago" />
+                        <div className="flex items-center gap-2">
+                          <span className="font-medium">💳 Pagar Online</span>
+                          <span className="text-xs text-muted-foreground">(Pix, Cartão, Boleto)</span>
+                        </div>
+                      </label>
+                    )}
                     {settings?.accept_pix && (
-                      <label className="flex items-center gap-3 p-3 border rounded-lg cursor-pointer">
+                      <label className="flex items-center gap-3 p-3 border rounded-lg cursor-pointer hover:bg-muted/50">
                         <RadioGroupItem value="pix" />
-                        <span>Pix</span>
+                        <span>Pix na entrega</span>
                       </label>
                     )}
                     {settings?.accept_card && (
-                      <label className="flex items-center gap-3 p-3 border rounded-lg cursor-pointer">
+                      <label className="flex items-center gap-3 p-3 border rounded-lg cursor-pointer hover:bg-muted/50">
                         <RadioGroupItem value="card" />
-                        <span>Cartão</span>
+                        <span>Cartão na entrega</span>
                       </label>
                     )}
                     {settings?.accept_cash && (
-                      <label className="flex items-center gap-3 p-3 border rounded-lg cursor-pointer">
+                      <label className="flex items-center gap-3 p-3 border rounded-lg cursor-pointer hover:bg-muted/50">
                         <RadioGroupItem value="cash" />
                         <span>Dinheiro</span>
                       </label>
@@ -824,9 +907,17 @@ function CheckoutView({ store, settings, cart, cartTotal, onClearCart }: {
                       <span className="text-primary">{formatCurrency(grandTotal)}</span>
                     </div>
                   </div>
-                  <Button type="submit" className="w-full mt-4" disabled={!isValid}>
-                    <MessageCircle className="mr-2 h-4 w-4" />
-                    Enviar via WhatsApp
+                  <Button type="submit" className="w-full mt-4" disabled={!isValid || submitting}>
+                    {submitting ? (
+                      <span className="animate-spin mr-2">⏳</span>
+                    ) : paymentMethod === 'mercadopago' ? (
+                      <>💳 Pagar Agora</>
+                    ) : (
+                      <>
+                        <MessageCircle className="mr-2 h-4 w-4" />
+                        Enviar via WhatsApp
+                      </>
+                    )}
                   </Button>
                 </CardContent>
               </Card>

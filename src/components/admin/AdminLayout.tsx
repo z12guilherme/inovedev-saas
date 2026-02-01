@@ -19,7 +19,7 @@ interface AdminLayoutProps {
   children: ReactNode;
 }
 
-import { CreditCard, Palette } from 'lucide-react';
+import { CreditCard, Palette, FileBarChart } from 'lucide-react';
 
 const navItems = [
   { icon: LayoutDashboard, label: 'Dashboard', path: '/admin' },
@@ -28,6 +28,7 @@ const navItems = [
   { icon: ShoppingCart, label: 'Pedidos', path: '/admin/pedidos' },
   { icon: Palette, label: 'Construtor', path: '/admin/construtor' },
   { icon: CreditCard, label: 'Pagamentos', path: '/admin/pagamentos' },
+  { icon: FileBarChart, label: 'Relatórios', path: '/admin/relatorios' },
   { icon: Settings, label: 'Configurações', path: '/admin/configuracoes' },
 ];
 

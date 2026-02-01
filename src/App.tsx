@@ -29,6 +29,7 @@ import AdminCategoriesPage from "./pages/admin/AdminCategoriesPage";
 import AdminOrdersPage from "./pages/admin/AdminOrdersPage";
 import AdminSettingsPage from "./pages/admin/AdminSettingsPage";
 import PaymentsPage from "./pages/admin/PaymentsPage";
+import ReportsPage from "./pages/admin/ReportsPage";
 import StoreBuilderPage from "./pages/admin/StoreBuilderPage";
 
 const queryClient = new QueryClient();
@@ -106,6 +107,11 @@ const App = () => (
                   <Route path="/admin/construtor" element={
                     <ProtectedRoute>
                       <StoreBuilderPage />
+                    </ProtectedRoute>
+                  } />
+                  <Route path="/admin/relatorios" element={
+                    <ProtectedRoute>
+                      <ReportsPage />
                     </ProtectedRoute>
                   } />
                   
