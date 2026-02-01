@@ -22,11 +22,13 @@ import NotFound from "./pages/NotFound";
 // Admin pages
 import AdminAuthPage from "./pages/admin/AdminAuthPage";
 import CreateStorePage from "./pages/admin/CreateStorePage";
+import OnboardingPage from "./pages/admin/OnboardingPage";
 import AdminDashboardPage from "./pages/admin/AdminDashboardPage";
 import AdminProductsPage from "./pages/admin/AdminProductsPage";
 import AdminCategoriesPage from "./pages/admin/AdminCategoriesPage";
 import AdminOrdersPage from "./pages/admin/AdminOrdersPage";
 import AdminSettingsPage from "./pages/admin/AdminSettingsPage";
+import PaymentsPage from "./pages/admin/PaymentsPage";
 
 const queryClient = new QueryClient();
 
@@ -65,6 +67,11 @@ const App = () => (
                       </AdminProvider>
                     </AuthProvider>
                   } />
+                  <Route path="/admin/onboarding" element={
+                    <ProtectedRoute>
+                      <OnboardingPage />
+                    </ProtectedRoute>
+                  } />
                   <Route path="/admin" element={
                     <ProtectedRoute>
                       <AdminDashboardPage />
@@ -83,6 +90,11 @@ const App = () => (
                   <Route path="/admin/pedidos" element={
                     <ProtectedRoute>
                       <AdminOrdersPage />
+                    </ProtectedRoute>
+                  } />
+                  <Route path="/admin/pagamentos" element={
+                    <ProtectedRoute>
+                      <PaymentsPage />
                     </ProtectedRoute>
                   } />
                   <Route path="/admin/configuracoes" element={
