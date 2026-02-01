@@ -10,6 +10,7 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { supabase } from '@/integrations/supabase/client';
 import { formatCurrency, generateWhatsAppMessage } from '@/lib/utils';
 import { toast } from 'sonner';
+import { DynamicStorefront } from '@/components/storefront/DynamicStorefront';
 
 interface StoreData {
   id: string;
@@ -233,6 +234,20 @@ export default function StorefrontPage() {
         products={products}
         cartItemCount={cartItemCount}
         onAddToCart={addToCart}
+      />
+    );
+  }
+
+  // Use dynamic layout for home view (no product, category, cart or checkout)
+  if (!isProductView && !isCategoryView && !isCartView && !isCheckoutView) {
+    return (
+      <DynamicStorefront
+        store={store}
+        settings={settings}
+        products={products}
+        categories={categories}
+        cartItemCount={cartItemCount}
+        onAddToCart={(product) => addToCart(product)}
       />
     );
   }

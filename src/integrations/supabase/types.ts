@@ -310,6 +310,56 @@ export type Database = {
           },
         ]
       }
+      store_sections: {
+        Row: {
+          content: Json | null
+          created_at: string
+          id: string
+          is_visible: boolean
+          section_type: string
+          settings: Json | null
+          sort_order: number
+          store_id: string
+          subtitle: string | null
+          title: string | null
+          updated_at: string
+        }
+        Insert: {
+          content?: Json | null
+          created_at?: string
+          id?: string
+          is_visible?: boolean
+          section_type: string
+          settings?: Json | null
+          sort_order?: number
+          store_id: string
+          subtitle?: string | null
+          title?: string | null
+          updated_at?: string
+        }
+        Update: {
+          content?: Json | null
+          created_at?: string
+          id?: string
+          is_visible?: boolean
+          section_type?: string
+          settings?: Json | null
+          sort_order?: number
+          store_id?: string
+          subtitle?: string | null
+          title?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "store_sections_store_id_fkey"
+            columns: ["store_id"]
+            isOneToOne: false
+            referencedRelation: "stores"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       store_settings: {
         Row: {
           accept_card: boolean | null
@@ -321,6 +371,7 @@ export type Database = {
           created_at: string
           delivery_fee: number | null
           id: string
+          layout_published: boolean | null
           logo_url: string | null
           mercadopago_access_token: string | null
           mercadopago_enabled: boolean | null
@@ -330,6 +381,9 @@ export type Database = {
           pix_key: string | null
           primary_color: string | null
           secondary_color: string | null
+          social_facebook: string | null
+          social_instagram: string | null
+          social_tiktok: string | null
           store_id: string
           updated_at: string
           whatsapp_number: string | null
@@ -344,6 +398,7 @@ export type Database = {
           created_at?: string
           delivery_fee?: number | null
           id?: string
+          layout_published?: boolean | null
           logo_url?: string | null
           mercadopago_access_token?: string | null
           mercadopago_enabled?: boolean | null
@@ -353,6 +408,9 @@ export type Database = {
           pix_key?: string | null
           primary_color?: string | null
           secondary_color?: string | null
+          social_facebook?: string | null
+          social_instagram?: string | null
+          social_tiktok?: string | null
           store_id: string
           updated_at?: string
           whatsapp_number?: string | null
@@ -367,6 +425,7 @@ export type Database = {
           created_at?: string
           delivery_fee?: number | null
           id?: string
+          layout_published?: boolean | null
           logo_url?: string | null
           mercadopago_access_token?: string | null
           mercadopago_enabled?: boolean | null
@@ -376,6 +435,9 @@ export type Database = {
           pix_key?: string | null
           primary_color?: string | null
           secondary_color?: string | null
+          social_facebook?: string | null
+          social_instagram?: string | null
+          social_tiktok?: string | null
           store_id?: string
           updated_at?: string
           whatsapp_number?: string | null
