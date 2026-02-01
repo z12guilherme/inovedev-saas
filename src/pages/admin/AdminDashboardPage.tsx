@@ -1,12 +1,13 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Package, ShoppingCart, DollarSign, TrendingUp, ArrowRight, Share2, ExternalLink } from 'lucide-react';
+import { Package, ShoppingCart, DollarSign, TrendingUp, ArrowRight, Share2, ExternalLink, Users } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { AdminLayout } from '@/components/admin/AdminLayout';
 import { DashboardAlerts } from '@/components/admin/DashboardAlerts';
-import { SalesChart } from '@/components/admin/SalesChart';
+import { SalesChart, PaymentMethodsChart, OrdersStatusChart } from '@/components/admin/SalesChart';
 import { useAdmin } from '@/contexts/AdminContext';
+import { useRealtimeNotifications } from '@/hooks/useRealtimeNotifications';
 import { supabase } from '@/integrations/supabase/client';
 import { formatCurrency } from '@/lib/utils';
 import { toast } from 'sonner';
@@ -27,6 +28,7 @@ interface Order {
   customer_name: string;
   total: number;
   status: string;
+  payment_method: string;
   created_at: string;
 }
 
@@ -44,6 +46,9 @@ export default function AdminDashboardPage() {
   const [recentOrders, setRecentOrders] = useState<Order[]>([]);
   const [allOrders, setAllOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
+
+  // Enable realtime notifications
+  useRealtimeNotifications({ storeId: store?.id || '' });
 
   useEffect(() => {
     if (!store) return;
@@ -217,8 +222,16 @@ export default function AdminDashboardPage() {
           </Card>
         </div>
 
-        {/* Sales Chart */}
-        <SalesChart orders={allOrders} />
+        {/* Charts Grid */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <SalesChart orders={allOrders} />
+          <PaymentMethodsChart orders={allOrders} />
+        </div>
+
+        {/* Orders Status */}
+        {allOrders.length > 0 && (
+          <OrdersStatusChart orders={allOrders} />
+        )}
 
         {/* Recent Orders */}
         <Card>
