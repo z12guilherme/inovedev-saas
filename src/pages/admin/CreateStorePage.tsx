@@ -31,7 +31,7 @@ export default function CreateStorePage() {
       }
     } else {
       toast.success('Loja criada com sucesso!');
-      navigate('/admin');
+      navigate('/admin/onboarding');
     }
 
     setLoading(false);

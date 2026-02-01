@@ -27,6 +27,9 @@ interface StoreSettings {
   banner_title: string;
   banner_subtitle: string;
   banner_image_url: string | null;
+  mercadopago_enabled: boolean;
+  mercadopago_public_key: string | null;
+  onboarding_completed: boolean;
 }
 
 interface AdminContextType {

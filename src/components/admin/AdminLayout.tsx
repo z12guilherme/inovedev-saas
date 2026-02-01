@@ -19,11 +19,14 @@ interface AdminLayoutProps {
   children: ReactNode;
 }
 
+import { CreditCard } from 'lucide-react';
+
 const navItems = [
   { icon: LayoutDashboard, label: 'Dashboard', path: '/admin' },
   { icon: Package, label: 'Produtos', path: '/admin/produtos' },
   { icon: FolderOpen, label: 'Categorias', path: '/admin/categorias' },
   { icon: ShoppingCart, label: 'Pedidos', path: '/admin/pedidos' },
+  { icon: CreditCard, label: 'Pagamentos', path: '/admin/pagamentos' },
   { icon: Settings, label: 'Configurações', path: '/admin/configuracoes' },
 ];
 

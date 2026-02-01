@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react';
-import { Plus, Pencil, Trash2, Search } from 'lucide-react';
+import { Plus, Pencil, Trash2, Search, Eye, EyeOff, Star } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import {
   Dialog,
@@ -25,7 +25,9 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { AdminLayout } from '@/components/admin/AdminLayout';
+import { ImageUpload, MultiImageUpload } from '@/components/admin/ImageUpload';
 import { useAdmin } from '@/contexts/AdminContext';
 import { supabase } from '@/integrations/supabase/client';
 import { formatCurrency } from '@/lib/utils';
@@ -55,6 +57,7 @@ export default function AdminProductsPage() {
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
+  const [filterActive, setFilterActive] = useState<'all' | 'active' | 'inactive'>('all');
   const [dialogOpen, setDialogOpen] = useState(false);
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
@@ -67,7 +70,9 @@ export default function AdminProductsPage() {
     stock: '0',
     is_featured: false,
     is_active: true,
-    category_id: ''
+    category_id: '',
+    image_url: '',
+    additional_images: [] as string[]
   });
 
   const fetchProducts = async () => {
@@ -113,7 +118,9 @@ export default function AdminProductsPage() {
       stock: '0',
       is_featured: false,
       is_active: true,
-      category_id: ''
+      category_id: '',
+      image_url: '',
+      additional_images: []
     });
     setEditingProduct(null);
   };
@@ -128,7 +135,9 @@ export default function AdminProductsPage() {
       stock: String(product.stock),
       is_featured: product.is_featured,
       is_active: product.is_active,
-      category_id: product.category_id || ''
+      category_id: product.category_id || '',
+      image_url: product.image_url || '',
+      additional_images: []
     });
     setDialogOpen(true);
   };
@@ -146,7 +155,8 @@ export default function AdminProductsPage() {
       stock: parseInt(formData.stock),
       is_featured: formData.is_featured,
       is_active: formData.is_active,
-      category_id: formData.category_id || null
+      category_id: formData.category_id || null,
+      image_url: formData.image_url || null
     };
 
     if (editingProduct) {
@@ -196,9 +206,44 @@ export default function AdminProductsPage() {
     setDeleteId(null);
   };
 
-  const filteredProducts = products.filter(p =>
-    p.name.toLowerCase().includes(search.toLowerCase())
-  );
+  const handleToggleActive = async (product: Product) => {
+    const { error } = await supabase
+      .from('products')
+      .update({ is_active: !product.is_active })
+      .eq('id', product.id);
+
+    if (error) {
+      toast.error('Erro ao atualizar produto');
+    } else {
+      toast.success(product.is_active ? 'Produto desativado' : 'Produto ativado');
+      fetchProducts();
+    }
+  };
+
+  const handleToggleFeatured = async (product: Product) => {
+    const { error } = await supabase
+      .from('products')
+      .update({ is_featured: !product.is_featured })
+      .eq('id', product.id);
+
+    if (error) {
+      toast.error('Erro ao atualizar produto');
+    } else {
+      toast.success(product.is_featured ? 'Destaque removido' : 'Marcado como destaque');
+      fetchProducts();
+    }
+  };
+
+  const filteredProducts = products
+    .filter(p => p.name.toLowerCase().includes(search.toLowerCase()))
+    .filter(p => {
+      if (filterActive === 'active') return p.is_active;
+      if (filterActive === 'inactive') return !p.is_active;
+      return true;
+    });
+
+  const activeCount = products.filter(p => p.is_active).length;
+  const inactiveCount = products.filter(p => !p.is_active).length;
 
   return (
     <AdminLayout>
@@ -206,7 +251,7 @@ export default function AdminProductsPage() {
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
             <h1 className="text-2xl font-bold">Produtos</h1>
-            <p className="text-muted-foreground">Gerencie os produtos da sua loja</p>
+            <p className="text-muted-foreground">{products.length} produtos cadastrados</p>
           </div>
           <Dialog open={dialogOpen} onOpenChange={(open) => {
             setDialogOpen(open);
@@ -225,12 +270,27 @@ export default function AdminProductsPage() {
                 </DialogTitle>
               </DialogHeader>
               <form onSubmit={handleSubmit} className="space-y-4">
+                {/* Image Upload */}
+                <div className="space-y-2">
+                  <Label>Imagem do produto</Label>
+                  <div className="h-40">
+                    <ImageUpload
+                      storeId={store?.id || ''}
+                      value={formData.image_url}
+                      onChange={(url) => setFormData({ ...formData, image_url: url })}
+                      onRemove={() => setFormData({ ...formData, image_url: '' })}
+                      folder="products"
+                    />
+                  </div>
+                </div>
+
                 <div className="space-y-2">
                   <Label htmlFor="name">Nome *</Label>
                   <Input
                     id="name"
                     value={formData.name}
                     onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                    placeholder="Ex: Camiseta básica"
                     required
                   />
                 </div>
@@ -241,6 +301,7 @@ export default function AdminProductsPage() {
                     id="description"
                     value={formData.description}
                     onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                    placeholder="Descreva seu produto..."
                     rows={3}
                   />
                 </div>
@@ -255,11 +316,12 @@ export default function AdminProductsPage() {
                       min="0"
                       value={formData.price}
                       onChange={(e) => setFormData({ ...formData, price: e.target.value })}
+                      placeholder="0,00"
                       required
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="original_price">Preço Original</Label>
+                    <Label htmlFor="original_price">Preço Antigo</Label>
                     <Input
                       id="original_price"
                       type="number"
@@ -267,7 +329,7 @@ export default function AdminProductsPage() {
                       min="0"
                       value={formData.original_price}
                       onChange={(e) => setFormData({ ...formData, original_price: e.target.value })}
-                      placeholder="Para desconto"
+                      placeholder="Para mostrar desconto"
                     />
                   </div>
                 </div>
@@ -304,23 +366,28 @@ export default function AdminProductsPage() {
                   </div>
                 </div>
 
-                <div className="flex items-center justify-between">
+                <div className="flex items-center justify-between p-4 bg-muted rounded-lg">
                   <div className="flex items-center gap-2">
-                    <Switch
-                      id="is_featured"
-                      checked={formData.is_featured}
-                      onCheckedChange={(checked) => setFormData({ ...formData, is_featured: checked })}
-                    />
-                    <Label htmlFor="is_featured">Destaque</Label>
+                    <Star className="h-4 w-4 text-warning" />
+                    <Label htmlFor="is_featured">Produto em destaque</Label>
                   </div>
+                  <Switch
+                    id="is_featured"
+                    checked={formData.is_featured}
+                    onCheckedChange={(checked) => setFormData({ ...formData, is_featured: checked })}
+                  />
+                </div>
+
+                <div className="flex items-center justify-between p-4 bg-muted rounded-lg">
                   <div className="flex items-center gap-2">
-                    <Switch
-                      id="is_active"
-                      checked={formData.is_active}
-                      onCheckedChange={(checked) => setFormData({ ...formData, is_active: checked })}
-                    />
-                    <Label htmlFor="is_active">Ativo</Label>
+                    <Eye className="h-4 w-4" />
+                    <Label htmlFor="is_active">Visível na loja</Label>
                   </div>
+                  <Switch
+                    id="is_active"
+                    checked={formData.is_active}
+                    onCheckedChange={(checked) => setFormData({ ...formData, is_active: checked })}
+                  />
                 </div>
 
                 <Button type="submit" className="w-full">
@@ -331,15 +398,24 @@ export default function AdminProductsPage() {
           </Dialog>
         </div>
 
-        {/* Search */}
-        <div className="relative max-w-sm">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input
-            placeholder="Buscar produtos..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="pl-9"
-          />
+        {/* Filters */}
+        <div className="flex flex-col sm:flex-row gap-4">
+          <div className="relative flex-1 max-w-sm">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Buscar produtos..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="pl-9"
+            />
+          </div>
+          <Tabs value={filterActive} onValueChange={(v) => setFilterActive(v as typeof filterActive)}>
+            <TabsList>
+              <TabsTrigger value="all">Todos ({products.length})</TabsTrigger>
+              <TabsTrigger value="active">Ativos ({activeCount})</TabsTrigger>
+              <TabsTrigger value="inactive">Inativos ({inactiveCount})</TabsTrigger>
+            </TabsList>
+          </Tabs>
         </div>
 
         {/* Products List */}
@@ -350,27 +426,36 @@ export default function AdminProductsPage() {
         ) : filteredProducts.length > 0 ? (
           <div className="grid gap-4">
             {filteredProducts.map((product) => (
-              <Card key={product.id}>
+              <Card key={product.id} className={!product.is_active ? 'opacity-60' : ''}>
                 <CardContent className="flex items-center gap-4 p-4">
-                  <div className="h-16 w-16 rounded-md bg-muted flex items-center justify-center flex-shrink-0">
+                  <div className="h-16 w-16 rounded-md bg-muted flex items-center justify-center flex-shrink-0 overflow-hidden">
                     {product.image_url ? (
                       <img
                         src={product.image_url}
                         alt={product.name}
-                        className="h-full w-full object-cover rounded-md"
+                        className="h-full w-full object-cover"
                       />
                     ) : (
                       <span className="text-2xl">📦</span>
                     )}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2 flex-wrap">
                       <h3 className="font-medium truncate">{product.name}</h3>
                       {!product.is_active && (
                         <Badge variant="secondary">Inativo</Badge>
                       )}
                       {product.is_featured && (
-                        <Badge>Destaque</Badge>
+                        <Badge className="bg-warning/10 text-warning border-warning/20">
+                          <Star className="h-3 w-3 mr-1 fill-current" />
+                          Destaque
+                        </Badge>
+                      )}
+                      {product.stock <= 5 && product.stock > 0 && (
+                        <Badge variant="destructive">Estoque baixo</Badge>
+                      )}
+                      {product.stock === 0 && (
+                        <Badge variant="destructive">Esgotado</Badge>
                       )}
                     </div>
                     <div className="flex items-center gap-2 mt-1">
@@ -384,10 +469,30 @@ export default function AdminProductsPage() {
                       )}
                     </div>
                     <p className="text-sm text-muted-foreground">
-                      Estoque: {product.stock}
+                      {product.stock} em estoque
                     </p>
                   </div>
                   <div className="flex gap-2">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => handleToggleFeatured(product)}
+                      title={product.is_featured ? 'Remover destaque' : 'Marcar destaque'}
+                    >
+                      <Star className={`h-4 w-4 ${product.is_featured ? 'fill-warning text-warning' : ''}`} />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => handleToggleActive(product)}
+                      title={product.is_active ? 'Desativar' : 'Ativar'}
+                    >
+                      {product.is_active ? (
+                        <Eye className="h-4 w-4" />
+                      ) : (
+                        <EyeOff className="h-4 w-4" />
+                      )}
+                    </Button>
                     <Button
                       variant="outline"
                       size="icon"

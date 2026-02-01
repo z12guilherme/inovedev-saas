@@ -115,9 +115,12 @@ export type Database = {
           customer_reference: string | null
           delivery_fee: number
           id: string
+          mercadopago_payment_id: string | null
+          mercadopago_preference_id: string | null
           notes: string | null
           order_number: number
           payment_method: string
+          payment_status: string | null
           status: Database["public"]["Enums"]["order_status"]
           store_id: string
           subtotal: number
@@ -135,9 +138,12 @@ export type Database = {
           customer_reference?: string | null
           delivery_fee: number
           id?: string
+          mercadopago_payment_id?: string | null
+          mercadopago_preference_id?: string | null
           notes?: string | null
           order_number?: number
           payment_method: string
+          payment_status?: string | null
           status?: Database["public"]["Enums"]["order_status"]
           store_id: string
           subtotal: number
@@ -155,9 +161,12 @@ export type Database = {
           customer_reference?: string | null
           delivery_fee?: number
           id?: string
+          mercadopago_payment_id?: string | null
+          mercadopago_preference_id?: string | null
           notes?: string | null
           order_number?: number
           payment_method?: string
+          payment_status?: string | null
           status?: Database["public"]["Enums"]["order_status"]
           store_id?: string
           subtotal?: number
@@ -170,6 +179,38 @@ export type Database = {
             columns: ["store_id"]
             isOneToOne: false
             referencedRelation: "stores"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      product_images: {
+        Row: {
+          created_at: string
+          id: string
+          image_url: string
+          product_id: string
+          sort_order: number | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          image_url: string
+          product_id: string
+          sort_order?: number | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          image_url?: string
+          product_id?: string
+          sort_order?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "product_images_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
             referencedColumns: ["id"]
           },
         ]
@@ -281,7 +322,11 @@ export type Database = {
           delivery_fee: number | null
           id: string
           logo_url: string | null
+          mercadopago_access_token: string | null
+          mercadopago_enabled: boolean | null
+          mercadopago_public_key: string | null
           min_order_value: number | null
+          onboarding_completed: boolean | null
           pix_key: string | null
           primary_color: string | null
           secondary_color: string | null
@@ -300,7 +345,11 @@ export type Database = {
           delivery_fee?: number | null
           id?: string
           logo_url?: string | null
+          mercadopago_access_token?: string | null
+          mercadopago_enabled?: boolean | null
+          mercadopago_public_key?: string | null
           min_order_value?: number | null
+          onboarding_completed?: boolean | null
           pix_key?: string | null
           primary_color?: string | null
           secondary_color?: string | null
@@ -319,7 +368,11 @@ export type Database = {
           delivery_fee?: number | null
           id?: string
           logo_url?: string | null
+          mercadopago_access_token?: string | null
+          mercadopago_enabled?: boolean | null
+          mercadopago_public_key?: string | null
           min_order_value?: number | null
+          onboarding_completed?: boolean | null
           pix_key?: string | null
           primary_color?: string | null
           secondary_color?: string | null

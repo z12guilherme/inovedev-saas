@@ -1,66 +1,99 @@
-import { useState } from 'react';
-import { Save, ExternalLink } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { Save, ExternalLink, Copy, Palette } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Switch } from '@/components/ui/switch';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Separator } from '@/components/ui/separator';
 import { AdminLayout } from '@/components/admin/AdminLayout';
+import { ImageUpload } from '@/components/admin/ImageUpload';
 import { useAdmin } from '@/contexts/AdminContext';
+import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
+const PRESET_COLORS = [
+  '#22c55e', // Green
+  '#3b82f6', // Blue
+  '#8b5cf6', // Purple
+  '#ec4899', // Pink
+  '#f97316', // Orange
+  '#ef4444', // Red
+  '#14b8a6', // Teal
+  '#eab308', // Yellow
+];
+
 export default function AdminSettingsPage() {
-  const { store, settings, updateSettings, refreshStore } = useAdmin();
+  const { store, settings, refreshStore } = useAdmin();
   const [loading, setLoading] = useState(false);
   
   const [formData, setFormData] = useState({
+    logo_url: settings?.logo_url || '',
     whatsapp_number: settings?.whatsapp_number || '',
     primary_color: settings?.primary_color || '#22c55e',
-    accept_pix: settings?.accept_pix ?? true,
-    accept_card: settings?.accept_card ?? true,
-    accept_cash: settings?.accept_cash ?? true,
-    pix_key: settings?.pix_key || '',
     delivery_fee: settings?.delivery_fee?.toString() || '5.99',
     min_order_value: settings?.min_order_value?.toString() || '30.00',
     banner_title: settings?.banner_title || '',
     banner_subtitle: settings?.banner_subtitle || ''
   });
 
+  useEffect(() => {
+    if (settings) {
+      setFormData({
+        logo_url: settings.logo_url || '',
+        whatsapp_number: settings.whatsapp_number || '',
+        primary_color: settings.primary_color || '#22c55e',
+        delivery_fee: settings.delivery_fee?.toString() || '5.99',
+        min_order_value: settings.min_order_value?.toString() || '30.00',
+        banner_title: settings.banner_title || '',
+        banner_subtitle: settings.banner_subtitle || ''
+      });
+    }
+  }, [settings]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!store) return;
+
     setLoading(true);
 
-    const { error } = await updateSettings({
-      whatsapp_number: formData.whatsapp_number || null,
-      primary_color: formData.primary_color,
-      accept_pix: formData.accept_pix,
-      accept_card: formData.accept_card,
-      accept_cash: formData.accept_cash,
-      pix_key: formData.pix_key || null,
-      delivery_fee: parseFloat(formData.delivery_fee),
-      min_order_value: parseFloat(formData.min_order_value),
-      banner_title: formData.banner_title,
-      banner_subtitle: formData.banner_subtitle
-    });
+    try {
+      const { error } = await supabase
+        .from('store_settings')
+        .update({
+          logo_url: formData.logo_url || null,
+          whatsapp_number: formData.whatsapp_number || null,
+          primary_color: formData.primary_color,
+          delivery_fee: parseFloat(formData.delivery_fee),
+          min_order_value: parseFloat(formData.min_order_value),
+          banner_title: formData.banner_title,
+          banner_subtitle: formData.banner_subtitle
+        })
+        .eq('store_id', store.id);
 
-    if (error) {
-      toast.error('Erro ao salvar configurações');
-    } else {
+      if (error) throw error;
+
+      await refreshStore();
       toast.success('Configurações salvas!');
+    } catch (error) {
+      console.error('Error saving settings:', error);
+      toast.error('Erro ao salvar configurações');
+    } finally {
+      setLoading(false);
     }
-
-    setLoading(false);
   };
 
   const storeUrl = store ? `${window.location.origin}/loja/${store.slug}` : '';
+
+  const handleCopyLink = () => {
+    navigator.clipboard.writeText(storeUrl);
+    toast.success('Link copiado!');
+  };
 
   return (
     <AdminLayout>
       <div className="space-y-6 max-w-2xl">
         <div>
           <h1 className="text-2xl font-bold">Configurações</h1>
-          <p className="text-muted-foreground">Configure sua loja online</p>
+          <p className="text-muted-foreground">Personalize sua loja online</p>
         </div>
 
         {/* Store URL */}
@@ -72,14 +105,8 @@ export default function AdminSettingsPage() {
           <CardContent>
             <div className="flex gap-2">
               <Input value={storeUrl} readOnly className="font-mono text-sm" />
-              <Button
-                variant="outline"
-                onClick={() => {
-                  navigator.clipboard.writeText(storeUrl);
-                  toast.success('Link copiado!');
-                }}
-              >
-                Copiar
+              <Button variant="outline" onClick={handleCopyLink}>
+                <Copy className="h-4 w-4" />
               </Button>
               <Button variant="outline" asChild>
                 <a href={storeUrl} target="_blank" rel="noopener noreferrer">
@@ -91,6 +118,67 @@ export default function AdminSettingsPage() {
         </Card>
 
         <form onSubmit={handleSubmit} className="space-y-6">
+          {/* Logo and Colors */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Palette className="h-5 w-5" />
+                Identidade Visual
+              </CardTitle>
+              <CardDescription>Logo e cores da sua loja</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div className="space-y-2">
+                <Label>Logo da loja</Label>
+                <div className="w-32 h-32">
+                  <ImageUpload
+                    storeId={store?.id || ''}
+                    value={formData.logo_url}
+                    onChange={(url) => setFormData({ ...formData, logo_url: url })}
+                    onRemove={() => setFormData({ ...formData, logo_url: '' })}
+                    folder="logos"
+                  />
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  Recomendado: imagem quadrada, mínimo 200x200px
+                </p>
+              </div>
+
+              <div className="space-y-2">
+                <Label>Cor principal</Label>
+                <div className="flex gap-2 flex-wrap">
+                  {PRESET_COLORS.map((color) => (
+                    <button
+                      key={color}
+                      type="button"
+                      className={`w-10 h-10 rounded-lg transition-all ${
+                        formData.primary_color === color 
+                          ? 'ring-2 ring-offset-2 ring-foreground scale-110' 
+                          : 'hover:scale-105'
+                      }`}
+                      style={{ backgroundColor: color }}
+                      onClick={() => setFormData({ ...formData, primary_color: color })}
+                    />
+                  ))}
+                  <div className="flex items-center gap-2">
+                    <Input
+                      type="color"
+                      value={formData.primary_color}
+                      onChange={(e) => setFormData({ ...formData, primary_color: e.target.value })}
+                      className="w-10 h-10 p-1 cursor-pointer"
+                    />
+                    <Input
+                      value={formData.primary_color}
+                      onChange={(e) => setFormData({ ...formData, primary_color: e.target.value })}
+                      className="w-24 font-mono text-sm"
+                      placeholder="#000000"
+                    />
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
           {/* WhatsApp */}
           <Card>
             <CardHeader>
@@ -109,67 +197,6 @@ export default function AdminSettingsPage() {
                 <p className="text-xs text-muted-foreground">
                   Formato: código do país + DDD + número (sem espaços ou traços)
                 </p>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Payment Methods */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Formas de Pagamento</CardTitle>
-              <CardDescription>Defina as formas de pagamento aceitas</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <Label htmlFor="accept_pix">Pix</Label>
-                  <p className="text-sm text-muted-foreground">Aceitar pagamento via Pix</p>
-                </div>
-                <Switch
-                  id="accept_pix"
-                  checked={formData.accept_pix}
-                  onCheckedChange={(checked) => setFormData({ ...formData, accept_pix: checked })}
-                />
-              </div>
-
-              {formData.accept_pix && (
-                <div className="space-y-2 ml-0 p-4 bg-muted rounded-lg">
-                  <Label htmlFor="pix_key">Chave Pix</Label>
-                  <Input
-                    id="pix_key"
-                    placeholder="email@exemplo.com"
-                    value={formData.pix_key}
-                    onChange={(e) => setFormData({ ...formData, pix_key: e.target.value })}
-                  />
-                </div>
-              )}
-
-              <Separator />
-
-              <div className="flex items-center justify-between">
-                <div>
-                  <Label htmlFor="accept_card">Cartão de Crédito</Label>
-                  <p className="text-sm text-muted-foreground">Aceitar cartão na entrega</p>
-                </div>
-                <Switch
-                  id="accept_card"
-                  checked={formData.accept_card}
-                  onCheckedChange={(checked) => setFormData({ ...formData, accept_card: checked })}
-                />
-              </div>
-
-              <Separator />
-
-              <div className="flex items-center justify-between">
-                <div>
-                  <Label htmlFor="accept_cash">Dinheiro</Label>
-                  <p className="text-sm text-muted-foreground">Aceitar dinheiro na entrega</p>
-                </div>
-                <Switch
-                  id="accept_cash"
-                  checked={formData.accept_cash}
-                  onCheckedChange={(checked) => setFormData({ ...formData, accept_cash: checked })}
-                />
               </div>
             </CardContent>
           </Card>
