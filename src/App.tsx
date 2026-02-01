@@ -29,6 +29,7 @@ import AdminCategoriesPage from "./pages/admin/AdminCategoriesPage";
 import AdminOrdersPage from "./pages/admin/AdminOrdersPage";
 import AdminSettingsPage from "./pages/admin/AdminSettingsPage";
 import PaymentsPage from "./pages/admin/PaymentsPage";
+import StoreBuilderPage from "./pages/admin/StoreBuilderPage";
 
 const queryClient = new QueryClient();
 
@@ -100,6 +101,11 @@ const App = () => (
                   <Route path="/admin/configuracoes" element={
                     <ProtectedRoute>
                       <AdminSettingsPage />
+                    </ProtectedRoute>
+                  } />
+                  <Route path="/admin/construtor" element={
+                    <ProtectedRoute>
+                      <StoreBuilderPage />
                     </ProtectedRoute>
                   } />
                   
