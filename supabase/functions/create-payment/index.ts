@@ -1,6 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
-import { MercadoPagoConfig, Preference } from 'https://esm.sh/mercadopago@2.0.4'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -71,9 +70,6 @@ serve(async (req) => {
 
     // --- MODO REAL (MERCADO PAGO) ---
     // 2. Configurar Mercado Pago com o token da loja (Split Payment / Multi-tenant)
-    const client = new MercadoPagoConfig({ accessToken: settings.mercadopago_access_token });
-    const preference = new Preference(client);
-
     // Construir URL do Webhook apontando para nossa Edge Function com o ID da loja
     const supabaseUrl = Deno.env.get('SUPABASE_URL') ?? '';
     const notificationUrl = `${supabaseUrl}/functions/v1/mercadopago-webhook?store_id=${storeId}`;
@@ -108,7 +104,22 @@ serve(async (req) => {
     console.log('🚀 Enviando para Mercado Pago:', JSON.stringify(preferenceBody)); // Debug
 
     // 3. Criar Preferência
-    const result = await preference.create({ body: preferenceBody })
+    // Substituindo SDK por fetch direto para evitar erro de compatibilidade no Deno (l.headers.raw is not a function)
+    const mpResponse = await fetch('https://api.mercadopago.com/checkout/preferences', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${settings.mercadopago_access_token}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(preferenceBody)
+    });
+
+    const result = await mpResponse.json();
+
+    if (!mpResponse.ok) {
+      console.error('Mercado Pago API Error:', result);
+      throw new Error(result.message || 'Erro ao criar preferência no Mercado Pago');
+    }
 
     // 4. Atualizar o pedido com o ID da preferência (Seguro via Service Role)
     if (orderId && result.id) {

@@ -84,6 +84,9 @@ Estas tarefas são bloqueantes. A loja não funciona dinamicamente sem elas.
 
 ## 3️⃣ Infraestrutura SaaS & Vercel
 
+- [x] **Deploy em Produção**
+    - Projeto rodando na Vercel: [https://inovedev-saas.vercel.app](https://inovedev-saas.vercel.app)
+
 - [x] **Middleware Vercel (Subdomínios)**
     - `middleware.ts` para reescrever URLs. Ex: `loja1.inovedev.com.br` → `/loja/loja1`.
 
