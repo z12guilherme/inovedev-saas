@@ -100,7 +100,7 @@ inovedev-saas/
 ├── supabase/
 │   ├── functions/      # Edge Functions (create-payment, create-user)
 │   └── migrations/     # Schemas do Banco de Dados
-└── middleware.ts       # Roteamento de Subdomínios (Edge Middleware)
+└── vercel.json         # Configuração de Roteamento SPA (Vercel)
 ```
 
 ---
