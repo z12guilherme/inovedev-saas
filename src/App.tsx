@@ -17,6 +17,7 @@ import CategoryPage from "./pages/CategoryPage";
 import CartPage from "./pages/CartPage";
 import CheckoutPage from "./pages/CheckoutPage";
 import StorefrontPage from "./pages/StorefrontPage";
+import SuccessPage from "./pages/SuccessPage";
 import NotFound from "./pages/NotFound";
 
 // Admin pages
@@ -43,7 +44,7 @@ const App = () => (
             <TooltipProvider>
               <Toaster />
               <Sonner />
-              <BrowserRouter>
+              <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
                 <Routes>
                   {/* Public routes - Demo store */}
                   <Route path="/" element={<Index />} />
@@ -52,6 +53,7 @@ const App = () => (
                   <Route path="/categoria/:slug" element={<CategoryPage />} />
                   <Route path="/carrinho" element={<CartPage />} />
                   <Route path="/checkout" element={<CheckoutPage />} />
+                  <Route path="/sucesso" element={<SuccessPage />} />
                   
                   {/* Dynamic store routes */}
                   <Route path="/loja/:slug" element={<StorefrontPage />} />
@@ -59,6 +61,7 @@ const App = () => (
                   <Route path="/loja/:slug/categoria/:categorySlug" element={<StorefrontPage />} />
                   <Route path="/loja/:slug/carrinho" element={<StorefrontPage />} />
                   <Route path="/loja/:slug/checkout" element={<StorefrontPage />} />
+                  <Route path="/loja/:slug/sucesso" element={<SuccessPage />} />
                   
                   {/* Admin routes */}
                   <Route path="/admin/login" element={<AdminAuthPage />} />

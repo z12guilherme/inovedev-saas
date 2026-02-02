@@ -8,6 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
+import logoImg from '@/assets/logo.jpg';
 
 export default function AdminAuthPage() {
   const navigate = useNavigate();
@@ -75,10 +76,8 @@ export default function AdminAuthPage() {
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
           <Link to="/" className="inline-flex items-center gap-2">
-            <div className="h-10 w-10 rounded-lg bg-primary flex items-center justify-center">
-              <Store className="h-6 w-6 text-primary-foreground" />
-            </div>
-            <span className="text-2xl font-bold">Inove Commerce</span>
+            <img src={logoImg} alt="Logo" className="h-10 w-10 rounded-lg object-cover" />
+            <span className="text-2xl font-bold text-blue-600">Inove Commerce</span>
           </Link>
           <p className="text-muted-foreground mt-2">Painel do Lojista</p>
         </div>
@@ -133,7 +132,7 @@ export default function AdminAuthPage() {
                     </div>
                   </div>
 
-                  <Button type="submit" className="w-full" disabled={loading}>
+                  <Button type="submit" className="w-full bg-blue-600 hover:bg-blue-700 text-white" disabled={loading}>
                     {loading ? 'Entrando...' : 'Entrar'}
                   </Button>
                 </form>
@@ -192,7 +191,7 @@ export default function AdminAuthPage() {
                     />
                   </div>
 
-                  <Button type="submit" className="w-full" disabled={loading}>
+                  <Button type="submit" className="w-full bg-blue-600 hover:bg-blue-700 text-white" disabled={loading}>
                     {loading ? 'Cadastrando...' : 'Criar conta'}
                   </Button>
                 </form>
@@ -202,7 +201,7 @@ export default function AdminAuthPage() {
         </Card>
 
         <p className="text-center text-sm text-muted-foreground mt-4">
-          <Link to="/" className="hover:text-primary">
+          <Link to="/" className="hover:text-blue-600">
             ← Voltar para a loja
           </Link>
         </p>

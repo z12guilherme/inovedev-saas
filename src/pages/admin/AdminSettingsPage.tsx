@@ -11,8 +11,8 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
 const PRESET_COLORS = [
-  '#22c55e', // Green
   '#3b82f6', // Blue
+  '#22c55e', // Green
   '#8b5cf6', // Purple
   '#ec4899', // Pink
   '#f97316', // Orange
@@ -28,7 +28,7 @@ export default function AdminSettingsPage() {
   const [formData, setFormData] = useState({
     logo_url: settings?.logo_url || '',
     whatsapp_number: settings?.whatsapp_number || '',
-    primary_color: settings?.primary_color || '#22c55e',
+    primary_color: settings?.primary_color || '#3b82f6',
     delivery_fee: settings?.delivery_fee?.toString() || '5.99',
     min_order_value: settings?.min_order_value?.toString() || '30.00',
     banner_title: settings?.banner_title || '',
@@ -40,7 +40,7 @@ export default function AdminSettingsPage() {
       setFormData({
         logo_url: settings.logo_url || '',
         whatsapp_number: settings.whatsapp_number || '',
-        primary_color: settings.primary_color || '#22c55e',
+        primary_color: settings.primary_color || '#3b82f6',
         delivery_fee: settings.delivery_fee?.toString() || '5.99',
         min_order_value: settings.min_order_value?.toString() || '30.00',
         banner_title: settings.banner_title || '',

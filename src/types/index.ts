@@ -1,3 +1,7 @@
+import { Database } from '@/integrations/supabase/types';
+
+export type Store = Database['public']['Tables']['stores']['Row'];
+
 export interface Product {
   id: string;
   name: string;
@@ -46,6 +50,7 @@ export interface Banner {
 
 export interface Order {
   id: string;
+  order_number: number;
   items: CartItem[];
   customer: CustomerInfo;
   total: number;

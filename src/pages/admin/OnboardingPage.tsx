@@ -33,8 +33,8 @@ const STEPS = [
 ];
 
 const PRESET_COLORS = [
-  '#22c55e', // Green
   '#3b82f6', // Blue
+  '#22c55e', // Green
   '#8b5cf6', // Purple
   '#ec4899', // Pink
   '#f97316', // Orange
@@ -79,7 +79,7 @@ export default function OnboardingPage() {
     
     // Step 2 - Visual
     logo_url: settings?.logo_url || '',
-    primary_color: settings?.primary_color || '#22c55e',
+    primary_color: settings?.primary_color || '#3b82f6',
     banner_title: settings?.banner_title || 'Bem-vindo à nossa loja!',
     banner_subtitle: settings?.banner_subtitle || 'Confira nossos produtos em destaque',
     
@@ -98,7 +98,7 @@ export default function OnboardingPage() {
       setFormData({
         whatsapp_number: settings.whatsapp_number || '',
         logo_url: settings.logo_url || '',
-        primary_color: settings.primary_color || '#22c55e',
+        primary_color: settings.primary_color || '#3b82f6',
         banner_title: settings.banner_title || 'Bem-vindo à nossa loja!',
         banner_subtitle: settings.banner_subtitle || 'Confira nossos produtos em destaque',
         accept_pix: settings.accept_pix ?? true,

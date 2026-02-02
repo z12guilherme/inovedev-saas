@@ -1,478 +1,236 @@
-import { useState, useEffect, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
-import {
-  DndContext,
-  DragEndEvent,
-  DragOverEvent,
-  DragStartEvent,
-  DragOverlay,
-  closestCenter,
-  pointerWithin,
-  useSensor,
-  useSensors,
-  PointerSensor,
-} from '@dnd-kit/core';
-import {
-  SortableContext,
-  arrayMove,
-  verticalListSortingStrategy,
-} from '@dnd-kit/sortable';
-import { 
-  Save, 
-  Eye, 
-  Undo2, 
-  Smartphone, 
-  Monitor, 
-  ArrowLeft,
-  Loader2,
-  Plus
-} from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { ScrollArea } from '@/components/ui/scroll-area';
-import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { useState, useEffect } from 'react';
 import { useAdmin } from '@/contexts/AdminContext';
-import { supabase } from '@/integrations/supabase/client';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { ImageUpload } from '@/components/admin/ImageUpload';
 import { toast } from 'sonner';
-import { Section, SectionType, SECTION_TEMPLATES } from '@/types/builder';
-import { SectionPalette } from '@/components/builder/SectionPalette';
-import { SortableSection } from '@/components/builder/SortableSection';
-import { SectionEditor } from '@/components/builder/SectionEditor';
-import { SectionPreview } from '@/components/builder/SectionPreview';
+import { Palette, Layout, Save, Image as ImageIcon, ExternalLink } from 'lucide-react';
 
 export default function StoreBuilderPage() {
-  const navigate = useNavigate();
-  const { store, settings } = useAdmin();
-  const [sections, setSections] = useState<Section[]>([]);
-  const [products, setProducts] = useState<any[]>([]);
-  const [categories, setCategories] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { store, settings, updateSettings, loading } = useAdmin();
   const [saving, setSaving] = useState(false);
-  const [editingSection, setEditingSection] = useState<Section | null>(null);
-  const [previewMode, setPreviewMode] = useState<'desktop' | 'mobile'>('desktop');
-  const [activeId, setActiveId] = useState<string | null>(null);
-  const [hasChanges, setHasChanges] = useState(false);
+  
+  const [formData, setFormData] = useState({
+    banner_title: '',
+    banner_subtitle: '',
+    banner_image_url: '',
+    primary_color: '#000000',
+  });
 
-  const sensors = useSensors(
-    useSensor(PointerSensor, {
-      activationConstraint: {
-        distance: 8,
-      },
-    })
-  );
-
-  // Fetch data
   useEffect(() => {
-    if (!store) return;
-
-    const fetchData = async () => {
-      try {
-        // Fetch sections
-        const { data: sectionsData } = await supabase
-          .from('store_sections')
-          .select('*')
-          .eq('store_id', store.id)
-          .order('sort_order');
-
-        // Transform to Section type
-        const transformedSections: Section[] = (sectionsData || []).map(s => ({
-          id: s.id,
-          store_id: s.store_id,
-          section_type: s.section_type as SectionType,
-          title: s.title,
-          subtitle: s.subtitle,
-          content: (s.content as Record<string, any>) || {},
-          settings: (s.settings as Record<string, any>) || {},
-          sort_order: s.sort_order,
-          is_visible: s.is_visible
-        }));
-
-        setSections(transformedSections);
-
-        // Fetch products
-        const { data: productsData } = await supabase
-          .from('products')
-          .select('*')
-          .eq('store_id', store.id)
-          .eq('is_active', true);
-
-        setProducts(productsData || []);
-
-        // Fetch categories
-        const { data: categoriesData } = await supabase
-          .from('categories')
-          .select('*')
-          .eq('store_id', store.id)
-          .order('sort_order');
-
-        setCategories(categoriesData || []);
-      } catch (error) {
-        console.error('Error fetching data:', error);
-        toast.error('Erro ao carregar dados');
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchData();
-  }, [store]);
-
-  // Handle drag events
-  const handleDragStart = (event: DragStartEvent) => {
-    setActiveId(event.active.id as string);
-  };
-
-  const handleDragEnd = (event: DragEndEvent) => {
-    const { active, over } = event;
-    setActiveId(null);
-
-    if (!over) return;
-
-    // Check if dragging from palette
-    if (active.id.toString().startsWith('template-')) {
-      const template = active.data.current?.template;
-      if (template && store) {
-        const newSection: Section = {
-          id: crypto.randomUUID(),
-          store_id: store.id,
-          section_type: template.type,
-          title: null,
-          subtitle: null,
-          content: { ...template.defaultContent },
-          settings: { ...template.defaultSettings },
-          sort_order: sections.length,
-          is_visible: true
-        };
-        setSections([...sections, newSection]);
-        setHasChanges(true);
-        toast.success('Seção adicionada!');
-      }
-      return;
+    if (settings) {
+      setFormData({
+        banner_title: settings.banner_title || '',
+        banner_subtitle: settings.banner_subtitle || '',
+        banner_image_url: settings.banner_image_url || '',
+        primary_color: settings.primary_color || '#000000',
+      });
     }
+  }, [settings]);
 
-    // Reordering existing sections
-    if (active.id !== over.id) {
-      const oldIndex = sections.findIndex((s) => s.id === active.id);
-      const newIndex = sections.findIndex((s) => s.id === over.id);
-      
-      if (oldIndex !== -1 && newIndex !== -1) {
-        const newSections = arrayMove(sections, oldIndex, newIndex).map((s, i) => ({
-          ...s,
-          sort_order: i
-        }));
-        setSections(newSections);
-        setHasChanges(true);
-      }
-    }
-  };
-
-  // Section actions
-  const handleToggleVisibility = (id: string) => {
-    setSections(sections.map(s => 
-      s.id === id ? { ...s, is_visible: !s.is_visible } : s
-    ));
-    setHasChanges(true);
-  };
-
-  const handleDeleteSection = (id: string) => {
-    setSections(sections.filter(s => s.id !== id));
-    setHasChanges(true);
-    toast.success('Seção removida');
-  };
-
-  const handleDuplicateSection = (section: Section) => {
-    const newSection: Section = {
-      ...section,
-      id: crypto.randomUUID(),
-      sort_order: sections.length
-    };
-    setSections([...sections, newSection]);
-    setHasChanges(true);
-    toast.success('Seção duplicada');
-  };
-
-  const handleEditSection = (section: Section) => {
-    setEditingSection(section);
-  };
-
-  const handleSaveSection = (updatedSection: Section) => {
-    setSections(sections.map(s => 
-      s.id === updatedSection.id ? updatedSection : s
-    ));
-    setEditingSection(null);
-    setHasChanges(true);
-  };
-
-  // Save all changes
-  const handleSaveAll = async () => {
-    if (!store) return;
-
+  const handleSave = async () => {
     setSaving(true);
-    try {
-      // Delete all existing sections
-      await supabase
-        .from('store_sections')
-        .delete()
-        .eq('store_id', store.id);
-
-      // Insert all sections
-      if (sections.length > 0) {
-        const { error } = await supabase
-          .from('store_sections')
-          .insert(sections.map((s, i) => ({
-            ...s,
-            sort_order: i,
-            store_id: store.id
-          })));
-
-        if (error) throw error;
-      }
-
-      // Update layout_published flag
-      await supabase
-        .from('store_settings')
-        .update({ layout_published: true })
-        .eq('store_id', store.id);
-
-      setHasChanges(false);
-      toast.success('Layout salvo com sucesso!');
-    } catch (error) {
-      console.error('Error saving:', error);
-      toast.error('Erro ao salvar layout');
-    } finally {
-      setSaving(false);
+    const { error } = await updateSettings(formData);
+    setSaving(false);
+    if (error) {
+      toast.error('Erro ao salvar alterações');
+    } else {
+      toast.success('Loja atualizada com sucesso!');
     }
   };
 
-  // Create default layout
-  const handleCreateDefaultLayout = () => {
-    if (!store) return;
-
-    const defaultSections: Section[] = [
-      {
-        id: crypto.randomUUID(),
-        store_id: store.id,
-        section_type: 'banner',
-        title: null,
-        subtitle: null,
-        content: {
-          image_url: '',
-          title: settings?.banner_title || 'Bem-vindo à nossa loja!',
-          subtitle: settings?.banner_subtitle || 'Confira nossos produtos',
-          button_text: 'Ver produtos'
-        },
-        settings: { height: 'medium', overlay: true, text_align: 'center' },
-        sort_order: 0,
-        is_visible: true
-      },
-      {
-        id: crypto.randomUUID(),
-        store_id: store.id,
-        section_type: 'category_list',
-        title: 'Categorias',
-        subtitle: null,
-        content: {},
-        settings: { layout: 'horizontal' },
-        sort_order: 1,
-        is_visible: true
-      },
-      {
-        id: crypto.randomUUID(),
-        store_id: store.id,
-        section_type: 'featured_products',
-        title: 'Destaques',
-        subtitle: null,
-        content: { limit: 4 },
-        settings: { columns: 4, show_price: true, show_button: true },
-        sort_order: 2,
-        is_visible: true
-      },
-      {
-        id: crypto.randomUUID(),
-        store_id: store.id,
-        section_type: 'product_grid',
-        title: 'Todos os Produtos',
-        subtitle: null,
-        content: { category_id: null, limit: 8 },
-        settings: { columns: 4, show_price: true, show_button: true },
-        sort_order: 3,
-        is_visible: true
-      },
-      {
-        id: crypto.randomUUID(),
-        store_id: store.id,
-        section_type: 'cta_button',
-        title: null,
-        subtitle: null,
-        content: { text: 'Fale conosco pelo WhatsApp', link_type: 'whatsapp' },
-        settings: { size: 'large', variant: 'primary' },
-        sort_order: 4,
-        is_visible: true
-      }
-    ];
-
-    setSections(defaultSections);
-    setHasChanges(true);
-    toast.success('Layout padrão criado!');
-  };
-
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-      </div>
-    );
-  }
+  if (loading) return <div className="flex items-center justify-center h-screen">Carregando...</div>;
 
   return (
-    <DndContext
-      sensors={sensors}
-      collisionDetection={closestCenter}
-      onDragStart={handleDragStart}
-      onDragEnd={handleDragEnd}
-    >
-      <div className="h-screen flex flex-col bg-muted/30">
-        {/* Header */}
-        <header className="h-14 border-b bg-background flex items-center justify-between px-4">
-          <div className="flex items-center gap-4">
-            <Button variant="ghost" size="icon" onClick={() => navigate('/admin')}>
-              <ArrowLeft className="h-5 w-5" />
-            </Button>
-            <div>
-              <h1 className="font-bold text-sm">Construtor de Loja</h1>
-              <p className="text-xs text-muted-foreground">{store?.name}</p>
-            </div>
-          </div>
-
-          <div className="flex items-center gap-2">
-            <Tabs value={previewMode} onValueChange={(v) => setPreviewMode(v as typeof previewMode)}>
-              <TabsList className="h-9">
-                <TabsTrigger value="desktop" className="px-3">
-                  <Monitor className="h-4 w-4" />
-                </TabsTrigger>
-                <TabsTrigger value="mobile" className="px-3">
-                  <Smartphone className="h-4 w-4" />
-                </TabsTrigger>
-              </TabsList>
-            </Tabs>
-
-            <Button variant="outline" size="sm" asChild>
-              <a href={`/loja/${store?.slug}`} target="_blank" rel="noopener noreferrer">
-                <Eye className="h-4 w-4 mr-2" />
-                Ver loja
-              </a>
-            </Button>
-
-            <Button 
-              size="sm" 
-              onClick={handleSaveAll}
-              disabled={saving || !hasChanges}
-            >
-              {saving ? (
-                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-              ) : (
-                <Save className="h-4 w-4 mr-2" />
-              )}
-              {saving ? 'Salvando...' : 'Salvar'}
-            </Button>
-          </div>
-        </header>
-
-        <div className="flex-1 flex overflow-hidden">
-          {/* Left Panel - Component Palette */}
-          <SectionPalette />
-
-          {/* Center - Section List */}
-          <div className="w-80 border-r bg-background flex flex-col">
-            <div className="p-4 border-b flex items-center justify-between">
-              <div>
-                <h2 className="font-bold text-sm">Seções</h2>
-                <p className="text-xs text-muted-foreground">{sections.length} seções</p>
-              </div>
-              {sections.length === 0 && (
-                <Button size="sm" variant="outline" onClick={handleCreateDefaultLayout}>
-                  <Plus className="h-4 w-4 mr-1" />
-                  Layout padrão
-                </Button>
-              )}
-            </div>
-            <ScrollArea className="flex-1 p-4">
-              {sections.length > 0 ? (
-                <SortableContext
-                  items={sections.map(s => s.id)}
-                  strategy={verticalListSortingStrategy}
-                >
-                  <div className="space-y-2">
-                    {sections.map((section) => (
-                      <SortableSection
-                        key={section.id}
-                        section={section}
-                        onToggleVisibility={handleToggleVisibility}
-                        onDelete={handleDeleteSection}
-                        onEdit={handleEditSection}
-                        onDuplicate={handleDuplicateSection}
-                      />
-                    ))}
-                  </div>
-                </SortableContext>
-              ) : (
-                <div className="text-center py-12 text-muted-foreground">
-                  <p className="text-sm mb-2">Arraste componentes aqui</p>
-                  <p className="text-xs">ou crie um layout padrão</p>
-                </div>
-              )}
-            </ScrollArea>
-          </div>
-
-          {/* Right - Preview */}
-          <div className="flex-1 bg-muted/50 overflow-auto p-4">
-            <div 
-              className={`mx-auto bg-background shadow-xl rounded-lg overflow-hidden transition-all ${
-                previewMode === 'mobile' ? 'max-w-[390px]' : 'max-w-4xl'
-              }`}
-            >
-              {/* Store Header Preview */}
-              <header className="border-b p-4 flex items-center justify-between">
-                <span className="font-bold text-primary">{store?.name}</span>
-                <div className="h-8 w-8 rounded-full bg-muted" />
-              </header>
-
-              {/* Sections Preview */}
-              <main className="min-h-[60vh]">
-                {sections.length > 0 ? (
-                  sections.map((section) => (
-                    <SectionPreview
-                      key={section.id}
-                      section={section}
-                      products={products}
-                      categories={categories}
-                      storeSlug={store?.slug || ''}
-                      settings={settings}
-                    />
-                  ))
-                ) : (
-                  <div className="flex items-center justify-center h-64 text-muted-foreground">
-                    <p>Adicione seções para visualizar</p>
-                  </div>
-                )}
-              </main>
-
-              {/* Store Footer Preview */}
-              <footer className="border-t p-4 text-center text-sm text-muted-foreground">
-                © {new Date().getFullYear()} {store?.name}
-              </footer>
-            </div>
-          </div>
+    <div className="container py-6 space-y-6">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+        <div>
+          <h1 className="text-3xl font-bold">Construtor da Loja</h1>
+          <p className="text-muted-foreground">Personalize a aparência da sua loja virtual</p>
+        </div>
+        <div className="flex gap-2 w-full sm:w-auto">
+          <Button variant="outline" className="flex-1 sm:flex-none" onClick={() => window.open(`/loja/${store?.slug}`, '_blank')}>
+            Ver Loja <ExternalLink className="ml-2 h-4 w-4" />
+          </Button>
+          <Button onClick={handleSave} disabled={saving} className="flex-1 sm:flex-none">
+            {saving ? 'Salvando...' : 'Salvar Alterações'}
+            <Save className="ml-2 h-4 w-4" />
+          </Button>
         </div>
       </div>
 
-      {/* Section Editor */}
-      <SectionEditor
-        section={editingSection}
-        storeId={store?.id || ''}
-        categories={categories}
-        onSave={handleSaveSection}
-        onClose={() => setEditingSection(null)}
-      />
-    </DndContext>
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Sidebar de Configurações */}
+        <div className="lg:col-span-1 space-y-6">
+          <Tabs defaultValue="banner" className="w-full">
+            <TabsList className="w-full">
+              <TabsTrigger value="banner" className="flex-1">Banner</TabsTrigger>
+              <TabsTrigger value="appearance" className="flex-1">Aparência</TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="banner" className="space-y-4 mt-4">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2 text-lg">
+                    <ImageIcon className="h-5 w-5" />
+                    Banner Principal
+                  </CardTitle>
+                  <CardDescription>
+                    Configure a imagem e textos de destaque da sua loja.
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="space-y-2">
+                    <Label>Imagem de Fundo</Label>
+                    <div className="aspect-video w-full bg-muted rounded-lg overflow-hidden border-2 border-dashed border-muted-foreground/25 flex items-center justify-center relative group">
+                       <div className="absolute inset-0 z-10 p-2">
+                         <ImageUpload
+                            storeId={store?.id || ''}
+                            value={formData.banner_image_url}
+                            onChange={(url) => setFormData({ ...formData, banner_image_url: url })}
+                            onRemove={() => setFormData({ ...formData, banner_image_url: '' })}
+                            folder="banners"
+                          />
+                       </div>
+                    </div>
+                    <p className="text-xs text-muted-foreground">Recomendado: 1920x600px</p>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label>Título Principal</Label>
+                    <Input 
+                      value={formData.banner_title} 
+                      onChange={(e) => setFormData({...formData, banner_title: e.target.value})}
+                      placeholder="Ex: Ofertas de Verão"
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label>Subtítulo</Label>
+                    <Textarea 
+                      value={formData.banner_subtitle} 
+                      onChange={(e) => setFormData({...formData, banner_subtitle: e.target.value})}
+                      placeholder="Ex: Descontos de até 50% em toda a loja"
+                      className="resize-none"
+                    />
+                  </div>
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            <TabsContent value="appearance" className="space-y-4 mt-4">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2 text-lg">
+                    <Palette className="h-5 w-5" />
+                    Cores da Marca
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="space-y-2">
+                    <Label>Cor Primária</Label>
+                    <div className="flex gap-2">
+                      <Input 
+                        type="color" 
+                        value={formData.primary_color}
+                        onChange={(e) => setFormData({...formData, primary_color: e.target.value})}
+                        className="w-12 h-10 p-1 cursor-pointer"
+                      />
+                      <Input 
+                        value={formData.primary_color}
+                        onChange={(e) => setFormData({...formData, primary_color: e.target.value})}
+                        className="flex-1"
+                      />
+                    </div>
+                    <p className="text-xs text-muted-foreground">Usada em botões, links e destaques.</p>
+                  </div>
+                </CardContent>
+              </Card>
+            </TabsContent>
+          </Tabs>
+        </div>
+
+        {/* Preview Area */}
+        <div className="lg:col-span-2">
+          <Card className="h-full flex flex-col overflow-hidden border-2">
+            <CardHeader className="border-b bg-muted/30 py-3">
+              <div className="flex items-center justify-between">
+                <CardTitle className="text-sm font-medium flex items-center gap-2">
+                  <Layout className="h-4 w-4" />
+                  Pré-visualização ao vivo
+                </CardTitle>
+                <div className="flex gap-1.5">
+                  <div className="w-3 h-3 rounded-full bg-red-400/80" />
+                  <div className="w-3 h-3 rounded-full bg-yellow-400/80" />
+                  <div className="w-3 h-3 rounded-full bg-green-400/80" />
+                </div>
+              </div>
+            </CardHeader>
+            <div className="flex-1 bg-background relative overflow-y-auto">
+              {/* Simulated Storefront Header */}
+              <div className="border-b bg-background/95 backdrop-blur p-4 flex items-center justify-between sticky top-0 z-20">
+                <span className="font-bold text-xl" style={{ color: formData.primary_color }}>{store?.name}</span>
+                <div className="flex gap-4 text-sm text-muted-foreground">
+                  <span className="hidden sm:inline">Início</span>
+                  <span className="hidden sm:inline">Produtos</span>
+                  <div className="h-8 w-8 rounded-full bg-muted flex items-center justify-center">
+                    <span className="text-xs">🛒</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Simulated Hero Section */}
+              <div className="relative bg-primary/5 py-20 md:py-32 overflow-hidden">
+                {formData.banner_image_url && (
+                  <div className="absolute inset-0 z-0">
+                    <img 
+                      src={formData.banner_image_url} 
+                      alt="Banner Preview" 
+                      className="w-full h-full object-cover opacity-20"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-background to-transparent" />
+                  </div>
+                )}
+                <div className="container relative z-10 text-center px-4">
+                  <h1 className="text-3xl md:text-5xl font-extrabold mb-4 tracking-tight text-foreground">
+                    {formData.banner_title || `Bem-vindo à ${store?.name}`}
+                  </h1>
+                  <p className="text-lg text-muted-foreground max-w-2xl mx-auto mb-8">
+                    {formData.banner_subtitle || 'Confira nossos produtos em destaque e aproveite as ofertas.'}
+                  </p>
+                  <Button 
+                    size="lg" 
+                    className="rounded-full px-8 text-lg h-12 shadow-lg"
+                    style={{ backgroundColor: formData.primary_color }}
+                  >
+                    Ver Produtos
+                  </Button>
+                </div>
+              </div>
+
+              {/* Placeholder for products */}
+              <div className="container py-12 px-4">
+                <h3 className="text-xl font-bold mb-6">Destaques</h3>
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                  {[1, 2, 3].map(i => (
+                    <div key={i} className="border rounded-lg overflow-hidden bg-card shadow-sm">
+                        <div className="aspect-square bg-muted animate-pulse" />
+                        <div className="p-4 space-y-2">
+                            <div className="h-4 bg-muted rounded w-3/4 animate-pulse" />
+                            <div className="h-4 bg-muted rounded w-1/2 animate-pulse" />
+                        </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </Card>
+        </div>
+      </div>
+    </div>
   );
 }

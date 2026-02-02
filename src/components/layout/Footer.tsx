@@ -5,6 +5,8 @@ import { useStore } from '@/contexts/StoreContext';
 export function Footer() {
   const { config, categories } = useStore();
 
+  if (!config) return null;
+
   const whatsappUrl = `https://wa.me/${config.whatsappNumber.replace(/\D/g, '')}`;
 
   return (

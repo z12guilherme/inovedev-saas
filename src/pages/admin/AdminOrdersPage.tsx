@@ -1,7 +1,9 @@
 import { useEffect, useState } from 'react';
-import { Eye, ChevronDown } from 'lucide-react';
+import { Eye, ChevronDown, Pencil, Trash2, Save, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import {
   Select,
@@ -16,6 +18,16 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { AdminLayout } from '@/components/admin/AdminLayout';
 import { useAdmin } from '@/contexts/AdminContext';
 import { supabase } from '@/integrations/supabase/client';
@@ -82,6 +94,9 @@ export default function AdminOrdersPage() {
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [orderItems, setOrderItems] = useState<OrderItem[]>([]);
+  const [deleteId, setDeleteId] = useState<string | null>(null);
+  const [isEditing, setIsEditing] = useState(false);
+  const [editFormData, setEditFormData] = useState<Partial<Order>>({});
 
   const fetchOrders = async () => {
     if (!store) return;
@@ -121,6 +136,24 @@ export default function AdminOrdersPage() {
 
   const handleViewOrder = async (order: Order) => {
     setSelectedOrder(order);
+    setIsEditing(false);
+    await fetchOrderItems(order.id);
+  };
+
+  const handleEditOrder = async (order: Order) => {
+    setSelectedOrder(order);
+    setEditFormData({
+      customer_name: order.customer_name,
+      customer_phone: order.customer_phone,
+      customer_address: order.customer_address,
+      customer_neighborhood: order.customer_neighborhood,
+      customer_city: order.customer_city,
+      customer_complement: order.customer_complement,
+      customer_reference: order.customer_reference,
+      status: order.status,
+      notes: order.notes
+    });
+    setIsEditing(true);
     await fetchOrderItems(order.id);
   };
 
@@ -138,6 +171,52 @@ export default function AdminOrdersPage() {
       if (selectedOrder?.id === orderId) {
         setSelectedOrder({ ...selectedOrder, status: newStatus });
       }
+    }
+  };
+
+  const handleDeleteOrder = async () => {
+    if (!deleteId) return;
+
+    // Primeiro exclui os itens (se não houver cascade no banco, é mais seguro fazer assim)
+    const { error: itemsError } = await supabase
+      .from('order_items')
+      .delete()
+      .eq('order_id', deleteId);
+
+    if (itemsError) {
+      toast.error('Erro ao excluir itens do pedido');
+      return;
+    }
+
+    const { error } = await supabase
+      .from('orders')
+      .delete()
+      .eq('id', deleteId);
+
+    if (error) {
+      toast.error('Erro ao excluir pedido');
+    } else {
+      toast.success('Pedido excluído!');
+      fetchOrders();
+    }
+    setDeleteId(null);
+  };
+
+  const handleSaveOrder = async () => {
+    if (!selectedOrder) return;
+
+    const { error } = await supabase
+      .from('orders')
+      .update(editFormData)
+      .eq('id', selectedOrder.id);
+
+    if (error) {
+      toast.error('Erro ao atualizar pedido');
+    } else {
+      toast.success('Pedido atualizado!');
+      setIsEditing(false);
+      fetchOrders();
+      setSelectedOrder({ ...selectedOrder, ...editFormData } as Order);
     }
   };
 
@@ -193,10 +272,17 @@ export default function AdminOrdersPage() {
                         <p className="font-bold text-primary">{formatCurrency(Number(order.total))}</p>
                         <p className="text-sm text-muted-foreground">{paymentLabels[order.payment_method]}</p>
                       </div>
-                      <Button variant="outline" size="sm" onClick={() => handleViewOrder(order)}>
-                        <Eye className="h-4 w-4 mr-2" />
-                        Ver
-                      </Button>
+                      <div className="flex gap-2">
+                        <Button variant="ghost" size="icon" onClick={() => handleViewOrder(order)} title="Ver detalhes">
+                          <Eye className="h-4 w-4" />
+                        </Button>
+                        <Button variant="ghost" size="icon" onClick={() => handleEditOrder(order)} title="Editar">
+                          <Pencil className="h-4 w-4" />
+                        </Button>
+                        <Button variant="ghost" size="icon" className="text-destructive hover:text-destructive" onClick={() => setDeleteId(order.id)} title="Excluir">
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
                     </div>
                   </div>
                 </CardContent>
@@ -220,10 +306,10 @@ export default function AdminOrdersPage() {
       <Dialog open={!!selectedOrder} onOpenChange={() => setSelectedOrder(null)}>
         <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>Pedido #{selectedOrder?.order_number}</DialogTitle>
+            <DialogTitle>Pedido #{selectedOrder?.order_number} {isEditing && '- Editando'}</DialogTitle>
           </DialogHeader>
           
-          {selectedOrder && (
+          {selectedOrder && !isEditing && (
             <div className="space-y-6">
               {/* Status */}
               <div>
@@ -310,8 +396,114 @@ export default function AdminOrdersPage() {
               </div>
             </div>
           )}
+
+          {selectedOrder && isEditing && (
+            <div className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Status</label>
+                  <Select
+                    value={editFormData.status}
+                    onValueChange={(value) => setEditFormData({ ...editFormData, status: value })}
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="pending">Pendente</SelectItem>
+                      <SelectItem value="confirmed">Confirmado</SelectItem>
+                      <SelectItem value="preparing">Preparando</SelectItem>
+                      <SelectItem value="shipped">Enviado</SelectItem>
+                      <SelectItem value="delivered">Entregue</SelectItem>
+                      <SelectItem value="cancelled">Cancelado</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Telefone</label>
+                  <Input 
+                    value={editFormData.customer_phone} 
+                    onChange={(e) => setEditFormData({...editFormData, customer_phone: e.target.value})} 
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Nome do Cliente</label>
+                <Input 
+                  value={editFormData.customer_name} 
+                  onChange={(e) => setEditFormData({...editFormData, customer_name: e.target.value})} 
+                />
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Endereço</label>
+                <Input 
+                  value={editFormData.customer_address} 
+                  onChange={(e) => setEditFormData({...editFormData, customer_address: e.target.value})} 
+                  placeholder="Rua e número"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Bairro</label>
+                  <Input 
+                    value={editFormData.customer_neighborhood} 
+                    onChange={(e) => setEditFormData({...editFormData, customer_neighborhood: e.target.value})} 
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Cidade</label>
+                  <Input 
+                    value={editFormData.customer_city} 
+                    onChange={(e) => setEditFormData({...editFormData, customer_city: e.target.value})} 
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Complemento</label>
+                <Input 
+                  value={editFormData.customer_complement || ''} 
+                  onChange={(e) => setEditFormData({...editFormData, customer_complement: e.target.value})} 
+                />
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Observações</label>
+                <Textarea 
+                  value={editFormData.notes || ''} 
+                  onChange={(e) => setEditFormData({...editFormData, notes: e.target.value})} 
+                />
+              </div>
+
+              <div className="flex justify-end gap-2 pt-4">
+                <Button variant="outline" onClick={() => setIsEditing(false)}>Cancelar</Button>
+                <Button onClick={handleSaveOrder}><Save className="w-4 h-4 mr-2"/> Salvar</Button>
+              </div>
+            </div>
+          )}
         </DialogContent>
       </Dialog>
+
+      {/* Delete Confirmation */}
+      <AlertDialog open={!!deleteId} onOpenChange={() => setDeleteId(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Excluir pedido?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Esta ação não pode ser desfeita. O pedido será removido permanentemente do histórico.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDeleteOrder} className="bg-destructive text-destructive-foreground">
+              Excluir
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </AdminLayout>
   );
 }

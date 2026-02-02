@@ -68,6 +68,7 @@ export function AdminProvider({ children }: { children: ReactNode }) {
         .from('stores')
         .select('*')
         .eq('user_id', user.id)
+        .limit(1)
         .maybeSingle();
 
       if (storeError) throw storeError;
@@ -80,17 +81,31 @@ export function AdminProvider({ children }: { children: ReactNode }) {
           .from('store_settings')
           .select('*')
           .eq('store_id', storeData.id)
-          .single();
+          .limit(1)
+          .maybeSingle();
 
         if (settingsError) throw settingsError;
-        setSettings(settingsData);
+
+        if (settingsData) {
+          setSettings(settingsData);
+        } else {
+          // Se não existirem configurações, cria o registro padrão
+          const { data: newSettings, error: createError } = await supabase
+            .from('store_settings')
+            .insert({ store_id: storeData.id })
+            .select()
+            .single();
+            
+          if (createError) throw createError;
+          setSettings(newSettings);
+        }
       } else {
         setStore(null);
         setSettings(null);
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error('Error fetching store:', err);
-      setError('Erro ao carregar dados da loja');
+      setError(err.message || 'Erro ao carregar dados da loja');
     } finally {
       setLoading(false);
     }

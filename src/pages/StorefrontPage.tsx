@@ -10,7 +10,6 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { supabase } from '@/integrations/supabase/client';
 import { formatCurrency, generateWhatsAppMessage } from '@/lib/utils';
 import { toast } from 'sonner';
-import { DynamicStorefront } from '@/components/storefront/DynamicStorefront';
 
 interface StoreData {
   id: string;
@@ -27,6 +26,8 @@ interface StoreSettings {
   min_order_value: number;
   banner_title: string;
   banner_subtitle: string;
+  banner_image_url: string | null;
+  primary_color: string | null;
 }
 
 interface Product {
@@ -81,7 +82,8 @@ export default function StorefrontPage() {
           .from('stores')
           .select('*')
           .eq('slug', slug)
-          .single();
+          .limit(1)
+          .maybeSingle();
 
         if (storeError || !storeData) {
           setLoading(false);
@@ -95,17 +97,21 @@ export default function StorefrontPage() {
           .from('store_settings')
           .select('*')
           .eq('store_id', storeData.id)
-          .single();
+          .maybeSingle();
 
         setSettings(settingsData);
 
         // Fetch products
-        const { data: productsData } = await supabase
+        const { data: productsData, error: productsError } = await supabase
           .from('products')
           .select('*')
           .eq('store_id', storeData.id)
           .eq('is_active', true)
           .order('is_featured', { ascending: false });
+
+        if (productsError) {
+          console.error('Erro ao buscar produtos:', productsError);
+        }
 
         setProducts(productsData || []);
 
@@ -238,20 +244,6 @@ export default function StorefrontPage() {
     );
   }
 
-  // Use dynamic layout for home view (no product, category, cart or checkout)
-  if (!isProductView && !isCategoryView && !isCartView && !isCheckoutView) {
-    return (
-      <DynamicStorefront
-        store={store}
-        settings={settings}
-        products={products}
-        categories={categories}
-        cartItemCount={cartItemCount}
-        onAddToCart={(product) => addToCart(product)}
-      />
-    );
-  }
-
   // Category or home view
   const displayProducts = isCategoryView
     ? products.filter(p => {
@@ -262,17 +254,43 @@ export default function StorefrontPage() {
 
   const featuredProducts = products.filter(p => p.is_featured);
 
+  // Estilo dinâmico para a cor primária
+  const primaryStyle = settings?.primary_color ? {
+    '--primary': settings.primary_color,
+    '--ring': settings.primary_color,
+  } as React.CSSProperties : {};
+
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="min-h-screen flex flex-col bg-gray-50/30" style={primaryStyle}>
+      {/* Top Bar */}
+      {settings?.whatsapp_number && (
+        <div className="bg-primary text-primary-foreground py-2 text-xs font-medium">
+          <div className="container flex justify-between items-center">
+            <span className="flex items-center gap-2">
+              <MessageCircle className="h-3 w-3" /> 
+              Fale conosco: {settings.whatsapp_number}
+            </span>
+            <span className="hidden sm:inline">Entregamos em toda a região</span>
+          </div>
+        </div>
+      )}
+
       {/* Header */}
-      <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur">
+      <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur shadow-sm">
         <div className="container flex h-16 items-center justify-between">
-          <Link to={`/loja/${slug}`} className="font-bold text-xl text-primary">
+          <Link to={`/loja/${slug}`} className="font-bold text-2xl tracking-tight" style={{ color: settings?.primary_color || 'inherit' }}>
             {store.name}
           </Link>
+
+          <nav className="hidden md:flex items-center gap-8 text-sm font-medium text-muted-foreground">
+            <Link to={`/loja/${slug}`} className="hover:text-primary transition-colors">Início</Link>
+            <Link to={`/loja/${slug}`} onClick={() => document.getElementById('products-grid')?.scrollIntoView({ behavior: 'smooth' })} className="hover:text-primary transition-colors">Produtos</Link>
+            {settings?.whatsapp_number && <a href={`https://wa.me/${settings.whatsapp_number.replace(/\D/g, '')}`} target="_blank" rel="noreferrer" className="hover:text-primary transition-colors">Contato</a>}
+          </nav>
+
           <Link to={`/loja/${slug}/carrinho`}>
-            <Button variant="ghost" size="icon" className="relative">
-              <ShoppingCart className="h-5 w-5" />
+            <Button variant="ghost" size="icon" className="relative hover:bg-primary/10 hover:text-primary">
+              <ShoppingCart className="h-6 w-6" />
               {cartItemCount > 0 && (
                 <Badge className="absolute -top-1 -right-1 h-5 w-5 rounded-full p-0 flex items-center justify-center text-xs">
                   {cartItemCount}
@@ -286,24 +304,89 @@ export default function StorefrontPage() {
       <main className="flex-1">
         {/* Hero */}
         {!isCategoryView && (
-          <section className="bg-gradient-to-br from-primary/10 via-background to-accent py-12 md:py-16">
-            <div className="container text-center">
-              <h1 className="text-3xl md:text-4xl font-bold mb-4">{settings?.banner_title || 'Bem-vindo!'}</h1>
-              <p className="text-muted-foreground">{settings?.banner_subtitle || 'Confira nossos produtos'}</p>
-            </div>
+          <section className="relative bg-gray-900 text-white py-24 md:py-32 overflow-hidden">
+             {settings?.banner_image_url ? (
+               <div className="absolute inset-0 z-0">
+                 <img 
+                   src={settings.banner_image_url} 
+                   alt="Banner" 
+                   className="w-full h-full object-cover"
+                 />
+                 <div className="absolute inset-0 bg-black/60" />
+               </div>
+             ) : (
+                <div className="absolute inset-0 bg-gradient-to-br from-blue-600 to-blue-800 z-0" />
+             )}
+             <div className="container relative z-10 text-center">
+               <div className="max-w-3xl mx-auto">
+                 <h1 className="text-4xl md:text-6xl font-extrabold mb-6 tracking-tight leading-tight text-white drop-shadow-md">{settings?.banner_title || `Bem-vindo à ${store.name}`}</h1>
+                 <p className="text-xl text-gray-200 mb-10 leading-relaxed drop-shadow-sm">{settings?.banner_subtitle || 'Confira nossos produtos em destaque e aproveite as ofertas exclusivas.'}</p>
+                 <Button 
+                   size="lg" 
+                   className="rounded-full px-10 text-lg h-14 shadow-lg hover:shadow-xl transition-all hover:scale-105 border-2 border-transparent" 
+                   style={{ backgroundColor: settings?.primary_color || 'white', color: settings?.primary_color ? 'white' : 'black' }}
+                   onClick={() => document.getElementById('products-grid')?.scrollIntoView({ behavior: 'smooth' })}
+                 >
+                   Ver Coleção <ArrowRight className="ml-2 h-5 w-5" />
+                 </Button>
+               </div>
+             </div>
           </section>
+        )}
+
+        {/* Features Bar */}
+        {!isCategoryView && (
+            <section className="py-10 bg-white border-b">
+                <div className="container grid grid-cols-1 md:grid-cols-3 gap-8">
+                    <div className="flex items-center gap-4 p-4 rounded-xl hover:bg-gray-50 transition-colors border border-transparent hover:border-gray-100">
+                        <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center text-primary shrink-0">
+                            <Truck className="h-6 w-6" />
+                        </div>
+                        <div>
+                            <h3 className="font-bold text-gray-900">Entrega Rápida</h3>
+                            <p className="text-sm text-muted-foreground">Para toda a região</p>
+                        </div>
+                    </div>
+                    <div className="flex items-center gap-4 p-4 rounded-xl hover:bg-gray-50 transition-colors border border-transparent hover:border-gray-100">
+                        <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center text-primary shrink-0">
+                            <ShieldCheck className="h-6 w-6" />
+                        </div>
+                        <div>
+                            <h3 className="font-bold text-gray-900">Compra Segura</h3>
+                            <p className="text-sm text-muted-foreground">Proteção total dos dados</p>
+                        </div>
+                    </div>
+                    <div className="flex items-center gap-4 p-4 rounded-xl hover:bg-gray-50 transition-colors border border-transparent hover:border-gray-100">
+                        <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center text-primary shrink-0">
+                            <CreditCard className="h-6 w-6" />
+                        </div>
+                        <div>
+                            <h3 className="font-bold text-gray-900">Pagamento Facilitado</h3>
+                            <p className="text-sm text-muted-foreground">Pix, Cartão e Dinheiro</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
         )}
 
         {/* Categories */}
         {categories.length > 0 && !isCategoryView && (
-          <section className="py-8 border-b">
+          <section className="py-16 bg-gray-50/50">
             <div className="container">
-              <div className="flex gap-2 overflow-x-auto pb-2">
+              <div className="flex items-center justify-between mb-8">
+                 <h2 className="text-2xl font-bold text-gray-900">Categorias</h2>
+              </div>
+              <div className="flex gap-4 overflow-x-auto pb-6 scrollbar-hide snap-x">
                 {categories.map(cat => (
-                  <Link key={cat.id} to={`/loja/${slug}/categoria/${cat.slug}`}>
-                    <Button variant="outline" size="sm">
-                      {cat.name}
-                    </Button>
+                  <Link key={cat.id} to={`/loja/${slug}/categoria/${cat.slug}`} className="flex-shrink-0 snap-start group">
+                    <div className="flex flex-col items-center gap-3 min-w-[120px] p-6 rounded-2xl bg-white border shadow-sm hover:shadow-md transition-all hover:-translate-y-1">
+                      <div className="w-16 h-16 rounded-full bg-gray-100 group-hover:bg-primary/10 flex items-center justify-center transition-colors">
+                        <span className="text-2xl font-bold text-gray-400 group-hover:text-primary transition-colors">
+                            {cat.name.charAt(0).toUpperCase()}
+                        </span>
+                      </div>
+                      <span className="text-sm font-medium text-gray-700 group-hover:text-primary transition-colors">{cat.name}</span>
+                    </div>
                   </Link>
                 ))}
               </div>
@@ -312,7 +395,7 @@ export default function StorefrontPage() {
         )}
 
         {/* Products */}
-        <section className="py-8">
+        <section className="py-16 bg-white" id="products-grid">
           <div className="container">
             {isCategoryView && (
               <div className="mb-6">
@@ -325,47 +408,102 @@ export default function StorefrontPage() {
               </div>
             )}
 
-            {!isCategoryView && featuredProducts.length > 0 && (
-              <h2 className="text-2xl font-bold mb-6">Destaques</h2>
+            {displayProducts.length === 0 && featuredProducts.length === 0 && (
+              <div className="text-center py-20 bg-muted/30 rounded-lg border-2 border-dashed">
+                <p className="text-muted-foreground text-lg">Nenhum produto disponível no momento.</p>
+              </div>
             )}
 
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-              {(isCategoryView ? displayProducts : featuredProducts.length > 0 ? featuredProducts : displayProducts).map(product => (
-                <ProductCard
-                  key={product.id}
-                  product={product}
-                  storeSlug={slug!}
-                  onAddToCart={() => addToCart(product)}
-                />
-              ))}
-            </div>
+            {isCategoryView ? (
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
+                {displayProducts.map(product => (
+                  <ProductCard
+                    key={product.id}
+                    product={product}
+                    storeSlug={slug!}
+                    onAddToCart={() => addToCart(product)}
+                    primaryColor={settings?.primary_color}
+                  />
+                ))}
+              </div>
+            ) : (
+              <div className="space-y-16">
+                {featuredProducts.length > 0 && (
+                  <div>
+                    <h2 className="text-2xl font-bold mb-8 text-gray-900">Destaques</h2>
+                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
+                      {featuredProducts.map(product => (
+                        <ProductCard
+                          key={product.id}
+                          product={product}
+                          storeSlug={slug!}
+                          onAddToCart={() => addToCart(product)}
+                          primaryColor={settings?.primary_color}
+                        />
+                      ))}
+                    </div>
+                  </div>
+                )}
 
-            {!isCategoryView && featuredProducts.length > 0 && displayProducts.length > featuredProducts.length && (
-              <>
-                <h2 className="text-2xl font-bold mt-12 mb-6">Todos os Produtos</h2>
-                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                  {displayProducts.filter(p => !p.is_featured).map(product => (
-                    <ProductCard
-                      key={product.id}
-                      product={product}
-                      storeSlug={slug!}
-                      onAddToCart={() => addToCart(product)}
-                    />
-                  ))}
-                </div>
-              </>
+                {categories.map(category => {
+                  const categoryProducts = products.filter(p => p.category_id === category.id);
+                  if (categoryProducts.length === 0) return null;
+
+                  return (
+                    <div key={category.id}>
+                      <div className="flex items-center justify-between mb-6">
+                        <h2 className="text-2xl font-bold text-gray-900">{category.name}</h2>
+                        <Link 
+                          to={`/loja/${slug}/categoria/${category.slug}`}
+                          className="text-sm font-medium hover:text-primary transition-colors"
+                        >
+                          Ver todos
+                        </Link>
+                      </div>
+                      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
+                        {categoryProducts.slice(0, 8).map(product => (
+                          <ProductCard
+                            key={product.id}
+                            product={product}
+                            storeSlug={slug!}
+                            onAddToCart={() => addToCart(product)}
+                            primaryColor={settings?.primary_color}
+                          />
+                        ))}
+                      </div>
+                    </div>
+                  );
+                })}
+
+                {categories.length === 0 && products.length > 0 && featuredProducts.length === 0 && (
+                   <div>
+                      <h2 className="text-2xl font-bold mb-8 text-gray-900">Todos os Produtos</h2>
+                      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
+                        {products.map(product => (
+                          <ProductCard
+                            key={product.id}
+                            product={product}
+                            storeSlug={slug!}
+                            onAddToCart={() => addToCart(product)}
+                            primaryColor={settings?.primary_color}
+                          />
+                        ))}
+                      </div>
+                   </div>
+                )}
+              </div>
             )}
           </div>
         </section>
 
         {/* CTA */}
         {settings?.whatsapp_number && (
-          <section className="py-12">
+          <section className="py-16 bg-gray-50">
             <div className="container">
               <div className="bg-primary rounded-2xl p-8 text-center text-primary-foreground">
                 <h2 className="text-xl font-bold mb-2">Dúvidas?</h2>
                 <p className="text-primary-foreground/80 mb-4">Fale conosco pelo WhatsApp</p>
-                <Button variant="secondary" asChild>
+                <Button variant="secondary" asChild className="text-primary">
                   <a
                     href={`https://wa.me/${settings.whatsapp_number.replace(/\D/g, '')}`}
                     target="_blank"
@@ -382,10 +520,31 @@ export default function StorefrontPage() {
       </main>
 
       {/* Footer */}
-      <footer className="border-t py-6">
-        <div className="container text-center text-sm text-muted-foreground">
-          <p>© {new Date().getFullYear()} {store.name}</p>
-          <p className="mt-1">Powered by Inove Commerce</p>
+      <footer className="bg-slate-900 text-slate-200 py-12 border-t-4 border-primary">
+        <div className="container">
+            <div className="grid md:grid-cols-3 gap-8 mb-8">
+                <div>
+                    <h3 className="text-white text-lg font-bold mb-4">{store.name}</h3>
+                    <p className="text-sm opacity-80 leading-relaxed">Sua loja favorita com os melhores produtos e atendimento.</p>
+                </div>
+                <div>
+                    <h4 className="text-white font-semibold mb-4">Links Rápidos</h4>
+                    <ul className="space-y-2 text-sm">
+                        <li><Link to={`/loja/${slug}`} className="hover:text-white transition-colors">Início</Link></li>
+                        <li><Link to={`/loja/${slug}/carrinho`} className="hover:text-white transition-colors">Carrinho</Link></li>
+                    </ul>
+                </div>
+                <div>
+                    <h4 className="text-white font-semibold mb-4">Contato</h4>
+                    {settings?.whatsapp_number && (
+                        <p className="text-sm mb-2 flex items-center gap-2"><MessageCircle className="h-4 w-4" /> {settings.whatsapp_number}</p>
+                    )}
+                </div>
+            </div>
+            <div className="border-t border-slate-800 pt-8 text-center text-sm opacity-60">
+                <p>© {new Date().getFullYear()} {store.name}. Todos os direitos reservados.</p>
+                <p className="mt-1 text-xs">Powered by Inove Commerce</p>
+            </div>
         </div>
       </footer>
     </div>
@@ -393,15 +552,16 @@ export default function StorefrontPage() {
 }
 
 // Product Card Component
-function ProductCard({ product, storeSlug, onAddToCart }: {
+function ProductCard({ product, storeSlug, onAddToCart, primaryColor }: {
   product: Product;
   storeSlug: string;
   onAddToCart: () => void;
+  primaryColor?: string | null;
 }) {
   const hasDiscount = product.original_price && Number(product.original_price) > Number(product.price);
 
   return (
-    <Card className="group overflow-hidden hover:shadow-lg transition-all">
+    <Card className="group overflow-hidden hover:shadow-xl transition-all border-transparent hover:border-primary/20 bg-white h-full flex flex-col">
       <Link to={`/loja/${storeSlug}/produto/${product.id}`}>
         <div className="aspect-square bg-muted relative overflow-hidden">
           {product.image_url ? (
@@ -416,19 +576,24 @@ function ProductCard({ product, storeSlug, onAddToCart }: {
           )}
         </div>
       </Link>
-      <CardContent className="p-4">
+      <CardContent className="p-4 flex flex-col flex-1">
         <Link to={`/loja/${storeSlug}/produto/${product.id}`}>
-          <h3 className="font-medium line-clamp-2 hover:text-primary min-h-[2.5rem]">{product.name}</h3>
+          <h3 className="font-medium line-clamp-2 group-hover:text-primary transition-colors min-h-[2.5rem] text-gray-800">{product.name}</h3>
         </Link>
-        <div className="mt-2 flex items-baseline gap-2">
-          <span className="text-lg font-bold text-primary">{formatCurrency(Number(product.price))}</span>
+        <div className="mt-auto pt-2 flex items-baseline gap-2">
+          <span className="text-lg font-bold" style={{ color: primaryColor || 'inherit' }}>{formatCurrency(Number(product.price))}</span>
           {hasDiscount && (
             <span className="text-sm text-muted-foreground line-through">
               {formatCurrency(Number(product.original_price!))}
             </span>
           )}
         </div>
-        <Button className="w-full mt-3" size="sm" onClick={(e) => { e.preventDefault(); onAddToCart(); }}>
+        <Button 
+          className="w-full mt-3 opacity-0 group-hover:opacity-100 transition-opacity" 
+          size="sm" 
+          style={{ backgroundColor: primaryColor || undefined }}
+          onClick={(e) => { e.preventDefault(); onAddToCart(); }}
+        >
           <ShoppingCart className="h-4 w-4 mr-2" />
           Adicionar
         </Button>
@@ -453,7 +618,7 @@ function ProductView({ store, settings, product, products, cartItemCount, onAddT
     <div className="min-h-screen flex flex-col">
       <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur">
         <div className="container flex h-16 items-center justify-between">
-          <Link to={`/loja/${store.slug}`} className="font-bold text-xl text-primary">{store.name}</Link>
+          <Link to={`/loja/${store.slug}`} className="font-bold text-xl" style={{ color: settings?.primary_color || 'inherit' }}>{store.name}</Link>
           <Link to={`/loja/${store.slug}/carrinho`}>
             <Button variant="ghost" size="icon" className="relative">
               <ShoppingCart className="h-5 w-5" />
@@ -490,7 +655,7 @@ function ProductView({ store, settings, product, products, cartItemCount, onAddT
             </div>
 
             <div className="flex items-baseline gap-3">
-              <span className="text-4xl font-bold text-primary">{formatCurrency(Number(product.price))}</span>
+              <span className="text-4xl font-bold" style={{ color: settings?.primary_color || 'inherit' }}>{formatCurrency(Number(product.price))}</span>
               {hasDiscount && (
                 <span className="text-xl text-muted-foreground line-through">
                   {formatCurrency(Number(product.original_price!))}
@@ -515,7 +680,11 @@ function ProductView({ store, settings, product, products, cartItemCount, onAddT
               </div>
             </div>
 
-            <Button size="lg" className="w-full" onClick={() => onAddToCart(product, quantity)}>
+            <Button 
+              size="lg" 
+              className="w-full" 
+              style={{ backgroundColor: settings?.primary_color || undefined }}
+              onClick={() => onAddToCart(product, quantity)}>
               <ShoppingCart className="mr-2 h-5 w-5" />
               Adicionar ao Carrinho
             </Button>
@@ -549,7 +718,7 @@ function CartView({ store, settings, cart, cartTotal, onUpdateQuantity }: {
       <div className="min-h-screen flex flex-col">
         <header className="border-b">
           <div className="container h-16 flex items-center">
-            <Link to={`/loja/${store.slug}`} className="font-bold text-xl text-primary">{store.name}</Link>
+            <Link to={`/loja/${store.slug}`} className="font-bold text-xl" style={{ color: settings?.primary_color || 'inherit' }}>{store.name}</Link>
           </div>
         </header>
         <main className="flex-1 flex items-center justify-center">
@@ -569,7 +738,7 @@ function CartView({ store, settings, cart, cartTotal, onUpdateQuantity }: {
     <div className="min-h-screen flex flex-col">
       <header className="border-b">
         <div className="container h-16 flex items-center">
-          <Link to={`/loja/${store.slug}`} className="font-bold text-xl text-primary">{store.name}</Link>
+          <Link to={`/loja/${store.slug}`} className="font-bold text-xl" style={{ color: settings?.primary_color || 'inherit' }}>{store.name}</Link>
         </div>
       </header>
 
@@ -593,7 +762,7 @@ function CartView({ store, settings, cart, cartTotal, onUpdateQuantity }: {
                   </div>
                   <div className="flex-1">
                     <h3 className="font-medium">{item.product.name}</h3>
-                    <p className="text-primary font-bold">{formatCurrency(Number(item.product.price))}</p>
+                    <p className="font-bold" style={{ color: settings?.primary_color || 'inherit' }}>{formatCurrency(Number(item.product.price))}</p>
                     <div className="flex items-center gap-2 mt-2">
                       <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => onUpdateQuantity(item.product.id, item.quantity - 1)}>
                         <Minus className="h-3 w-3" />
@@ -627,7 +796,7 @@ function CartView({ store, settings, cart, cartTotal, onUpdateQuantity }: {
                   </div>
                   <div className="border-t pt-2 flex justify-between font-bold text-lg">
                     <span>Total</span>
-                    <span className="text-primary">{formatCurrency(grandTotal)}</span>
+                    <span style={{ color: settings?.primary_color || 'inherit' }}>{formatCurrency(grandTotal)}</span>
                   </div>
                 </div>
                 {!canCheckout && settings && (
@@ -635,7 +804,12 @@ function CartView({ store, settings, cart, cartTotal, onUpdateQuantity }: {
                     Pedido mínimo: {formatCurrency(Number(settings.min_order_value))}
                   </p>
                 )}
-                <Button className="w-full mt-4" disabled={!canCheckout} asChild>
+                <Button 
+                  className="w-full mt-4" 
+                  disabled={!canCheckout} 
+                  asChild
+                  style={{ backgroundColor: settings?.primary_color || undefined }}
+                >
                   <Link to={`/loja/${store.slug}/checkout`}>Finalizar Pedido</Link>
                 </Button>
               </CardContent>
@@ -656,6 +830,7 @@ function CheckoutView({ store, settings, cart, cartTotal, onClearCart }: {
   onClearCart: () => void;
 }) {
   const navigate = useNavigate();
+  const [orderNumber, setOrderNumber] = useState<number | null>(null);
   const [orderSent, setOrderSent] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState('pix');
   const [submitting, setSubmitting] = useState(false);
@@ -736,19 +911,8 @@ function CheckoutView({ store, settings, cart, cartTotal, onClearCart }: {
         }
       }
 
-      // WhatsApp checkout for other methods
-      if (settings?.whatsapp_number) {
-        const paymentLabel = paymentMethod === 'pix' ? 'Pix' : paymentMethod === 'card' ? 'Cartão' : 'Dinheiro';
-        const message = generateWhatsAppMessage(
-          cart.map(i => ({ product: { name: i.product.name, price: Number(i.product.price) }, quantity: i.quantity })),
-          cartTotal,
-          Number(settings.delivery_fee),
-          formData,
-          paymentLabel
-        );
-        window.open(`https://wa.me/${settings.whatsapp_number.replace(/\D/g, '')}?text=${message}`, '_blank');
-      }
 
+      setOrderNumber(order.order_number);
       setOrderSent(true);
       toast.success('Pedido criado com sucesso!');
     } catch (error) {
@@ -766,7 +930,7 @@ function CheckoutView({ store, settings, cart, cartTotal, onClearCart }: {
           <div className="h-16 w-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4">
             <MessageCircle className="h-8 w-8 text-primary" />
           </div>
-          <h1 className="text-2xl font-bold mb-2">Pedido Enviado!</h1>
+          <h1 className="text-2xl font-bold mb-2">Pedido #{orderNumber} Enviado!</h1>
           <p className="text-muted-foreground mb-6">Seu pedido foi registrado e enviado para a loja.</p>
           <Button onClick={() => { onClearCart(); navigate(`/loja/${store.slug}`); }}>
             Voltar à Loja
@@ -780,7 +944,7 @@ function CheckoutView({ store, settings, cart, cartTotal, onClearCart }: {
     <div className="min-h-screen flex flex-col">
       <header className="border-b">
         <div className="container h-16 flex items-center">
-          <Link to={`/loja/${store.slug}`} className="font-bold text-xl text-primary">{store.name}</Link>
+          <Link to={`/loja/${store.slug}`} className="font-bold text-xl" style={{ color: settings?.primary_color || 'inherit' }}>{store.name}</Link>
         </div>
       </header>
 
@@ -904,18 +1068,23 @@ function CheckoutView({ store, settings, cart, cartTotal, onClearCart }: {
                     </div>
                     <div className="border-t pt-2 flex justify-between font-bold text-lg">
                       <span>Total</span>
-                      <span className="text-primary">{formatCurrency(grandTotal)}</span>
+                      <span style={{ color: settings?.primary_color || 'inherit' }}>{formatCurrency(grandTotal)}</span>
                     </div>
                   </div>
-                  <Button type="submit" className="w-full mt-4" disabled={!isValid || submitting}>
+                  <Button 
+                    type="submit" 
+                    className="w-full mt-4" 
+                    disabled={!isValid || submitting}
+                    style={{ backgroundColor: settings?.primary_color || undefined }}
+                  >
                     {submitting ? (
                       <span className="animate-spin mr-2">⏳</span>
                     ) : paymentMethod === 'mercadopago' ? (
                       <>💳 Pagar Agora</>
                     ) : (
                       <>
-                        <MessageCircle className="mr-2 h-4 w-4" />
-                        Enviar via WhatsApp
+                        <ArrowRight className="mr-2 h-4 w-4" />
+                        Finalizar Pedido
                       </>
                     )}
                   </Button>

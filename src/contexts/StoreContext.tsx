@@ -1,114 +1,21 @@
-import { createContext, useContext, ReactNode } from 'react';
+import { createContext, useContext, ReactNode, useEffect, useState } from 'react';
 import { StoreConfig, Category, Product } from '@/types';
-import camisetaImg from '@/assets/products/camiseta.jpg';
-import tenisImg from '@/assets/products/tenis.jpg';
-import perfumeImg from '@/assets/products/perfume.jpg';
-import relogioImg from '@/assets/products/relogio.jpg';
-import vitaminaImg from '@/assets/products/vitamina.jpg';
-import cafeImg from '@/assets/products/cafe.jpg';
+import { supabase } from '@/integrations/supabase/client';
+import { Database } from '@/integrations/supabase/types';
 
-// Mock store configuration - would come from backend in production
-const mockStoreConfig: StoreConfig = {
-  name: 'Inove Commerce',
-  whatsappNumber: '5511999999999',
-  primaryColor: '#22c55e',
-  banners: [
-    {
-      id: '1',
-      image: '/placeholder.svg',
-      title: 'Ofertas Especiais',
-      subtitle: 'Até 50% de desconto em produtos selecionados'
-    }
-  ],
-  deliveryFee: 5.99,
-  minOrderValue: 30,
-  acceptCard: true,
-  acceptPix: true,
-  pixKey: 'loja@email.com'
+// Tipo auxiliar para a resposta do Supabase com relacionamentos (Joins)
+type ProductWithRelations = Database['public']['Tables']['products']['Row'] & {
+  categories: Pick<Database['public']['Tables']['categories']['Row'], 'slug'> | null;
+  product_images: Pick<Database['public']['Tables']['product_images']['Row'], 'image_url' | 'sort_order'>[];
 };
 
-const mockCategories: Category[] = [
-  { id: '1', name: 'Roupas', slug: 'roupas' },
-  { id: '2', name: 'Calçados', slug: 'calcados' },
-  { id: '3', name: 'Acessórios', slug: 'acessorios' },
-  { id: '4', name: 'Perfumaria', slug: 'perfumaria' },
-  { id: '5', name: 'Farmácia', slug: 'farmacia' },
-  { id: '6', name: 'Mercado', slug: 'mercado' }
-];
-
-const mockProducts: Product[] = [
-  {
-    id: '1',
-    name: 'Camiseta Premium',
-    description: 'Camiseta de algodão premium com caimento perfeito. Ideal para o dia a dia. Tecido macio e durável que mantém a cor mesmo após várias lavagens.',
-    price: 89.90,
-    originalPrice: 119.90,
-    images: [camisetaImg],
-    category: 'roupas',
-    stock: 50,
-    featured: true,
-    createdAt: new Date()
-  },
-  {
-    id: '2',
-    name: 'Tênis Esportivo',
-    description: 'Tênis confortável para corrida e academia. Tecnologia de amortecimento avançada para maior conforto durante exercícios.',
-    price: 299.90,
-    images: [tenisImg],
-    category: 'calcados',
-    stock: 30,
-    featured: true,
-    createdAt: new Date()
-  },
-  {
-    id: '3',
-    name: 'Perfume Exclusivo',
-    description: 'Fragrância marcante e duradoura para ocasiões especiais. Notas de âmbar, baunilha e sândalo.',
-    price: 189.90,
-    originalPrice: 249.90,
-    images: [perfumeImg],
-    category: 'perfumaria',
-    stock: 20,
-    featured: true,
-    createdAt: new Date()
-  },
-  {
-    id: '4',
-    name: 'Relógio Elegante',
-    description: 'Relógio analógico com design sofisticado e resistente à água. Perfeito para uso diário e ocasiões especiais.',
-    price: 459.90,
-    images: [relogioImg],
-    category: 'acessorios',
-    stock: 15,
-    featured: true,
-    createdAt: new Date()
-  },
-  {
-    id: '5',
-    name: 'Vitamina C 1000mg',
-    description: 'Suplemento de vitamina C para fortalecer a imunidade. 60 cápsulas para uso diário.',
-    price: 29.90,
-    images: [vitaminaImg],
-    category: 'farmacia',
-    stock: 100,
-    createdAt: new Date()
-  },
-  {
-    id: '6',
-    name: 'Café Premium 500g',
-    description: 'Café torrado e moído, blend especial com notas de chocolate. Origem controlada, 100% arábica.',
-    price: 34.90,
-    images: [cafeImg],
-    category: 'mercado',
-    stock: 80,
-    createdAt: new Date()
-  }
-];
-
 interface StoreContextType {
-  config: StoreConfig;
+  store: { id: string; name: string; slug: string } | null;
+  config: StoreConfig | null;
   categories: Category[];
   products: Product[];
+  loading: boolean;
+  error: string | null;
   getProductById: (id: string) => Product | undefined;
   getProductsByCategory: (categorySlug: string) => Product[];
   getFeaturedProducts: () => Product[];
@@ -117,19 +24,171 @@ interface StoreContextType {
 const StoreContext = createContext<StoreContextType | undefined>(undefined);
 
 export function StoreProvider({ children }: { children: ReactNode }) {
-  const getProductById = (id: string) => mockProducts.find(p => p.id === id);
+  const [store, setStore] = useState<{ id: string; name: string; slug: string } | null>(null);
+  const [config, setConfig] = useState<StoreConfig | null>(null);
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [products, setProducts] = useState<Product[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchStoreData = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+
+        // 1. Detectar Slug da URL
+        const hostname = window.location.hostname;
+        let slug = '';
+
+        // Lógica de Subdomínio
+        const parts = hostname.split('.');
+        if (hostname.includes('localhost')) {
+          // tenant.localhost
+          if (parts.length > 1 && parts[0] !== 'www') slug = parts[0];
+        } else {
+          // tenant.domain.com (ignora www e app)
+          if (parts.length > 2 && !['www', 'app'].includes(parts[0])) {
+            slug = parts[0];
+          }
+        }
+
+        // Fallback: Lógica de Caminho (ex: /loja/minha-loja)
+        if (!slug) {
+          const pathParts = window.location.pathname.split('/');
+          const lojaIndex = pathParts.indexOf('loja');
+          if (lojaIndex !== -1 && pathParts[lojaIndex + 1]) {
+            slug = pathParts[lojaIndex + 1];
+          }
+        }
+
+        if (!slug) {
+          setLoading(false);
+          return;
+        }
+
+        // 2. Buscar Loja
+        const { data: store, error: storeError } = await supabase
+          .from('stores')
+          .select('id, name, slug')
+          .eq('slug', slug)
+          .limit(1)
+          .maybeSingle();
+
+        if (storeError || !store) {
+          throw new Error('Loja não encontrada');
+        }
+
+        // 3. Buscar Configurações
+        const { data: settings, error: settingsError } = await supabase
+          .from('store_settings')
+          .select('*')
+          .eq('store_id', store.id)
+          .maybeSingle();
+
+        if (settingsError) throw settingsError;
+
+        // 4. Buscar Categorias
+        const { data: catsData, error: catsError } = await supabase
+          .from('categories')
+          .select('*')
+          .eq('store_id', store.id)
+          .order('sort_order', { ascending: true });
+
+        if (catsError) throw catsError;
+
+        // 5. Buscar Produtos
+        const { data: prodsData, error: prodsError } = await supabase 
+          .from('products')
+          .select<string, ProductWithRelations>(`
+            *,
+            categories (slug),
+            product_images (image_url, sort_order)
+          `)
+          .eq('store_id', store.id)
+          .eq('is_active', true);
+
+        if (prodsError) throw prodsError;
+
+        // Mapear Configurações
+        const mappedConfig: StoreConfig = {
+          name: store.name,
+          logo: settings?.logo_url || undefined,
+          whatsappNumber: settings?.whatsapp_number || '',
+          primaryColor: settings?.primary_color || '#000000',
+          banners: settings?.banner_image_url ? [{
+            id: 'main',
+            image: settings.banner_image_url,
+            title: settings.banner_title || '',
+            subtitle: settings.banner_subtitle || ''
+          }] : [],
+          deliveryFee: settings?.delivery_fee || 0,
+          minOrderValue: settings?.min_order_value || 0,
+          pixKey: settings?.pix_key || undefined,
+          acceptCard: settings?.accept_card || false,
+          acceptPix: settings?.accept_pix || false
+        };
+
+        // Mapear Categorias
+        const mappedCategories: Category[] = catsData.map(c => ({
+          id: c.id,
+          name: c.name,
+          slug: c.slug,
+          image: c.image_url || undefined
+        }));
+
+        // Mapear Produtos
+        const mappedProducts: Product[] = prodsData.map((p) => {
+          const sortedImages = p.product_images?.sort((a, b) => (a.sort_order || 0) - (b.sort_order || 0)) || [];
+          const images = sortedImages.map((img) => img.image_url);
+          if (images.length === 0 && p.image_url) images.push(p.image_url);
+
+          return {
+            id: p.id,
+            name: p.name,
+            description: p.description || '',
+            price: p.price,
+            originalPrice: p.original_price || undefined,
+            images: images,
+            category: p.categories?.slug || 'geral',
+            stock: p.stock,
+            featured: p.is_featured || false,
+            createdAt: new Date(p.created_at)
+          };
+        });
+
+        setStore(store);
+        setConfig(mappedConfig);
+        setCategories(mappedCategories);
+        setProducts(mappedProducts);
+
+      } catch (err) {
+        console.error('Erro ao carregar loja:', err);
+        setError(err instanceof Error ? err.message : 'Erro desconhecido');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchStoreData();
+  }, []);
+
+  const getProductById = (id: string) => products.find(p => p.id === id);
   
   const getProductsByCategory = (categorySlug: string) =>
-    mockProducts.filter(p => p.category === categorySlug);
+    products.filter(p => p.category === categorySlug);
   
-  const getFeaturedProducts = () => mockProducts.filter(p => p.featured);
+  const getFeaturedProducts = () => products.filter(p => p.featured);
 
   return (
     <StoreContext.Provider
       value={{
-        config: mockStoreConfig,
-        categories: mockCategories,
-        products: mockProducts,
+        store,
+        config,
+        categories,
+        products,
+        loading,
+        error,
         getProductById,
         getProductsByCategory,
         getFeaturedProducts
