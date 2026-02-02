@@ -85,7 +85,11 @@ Estas tarefas são bloqueantes. A loja não funciona dinamicamente sem elas.
 ## 3️⃣ Infraestrutura SaaS & Vercel
 
 - [x] **Deploy em Produção**
-    - Projeto rodando na Vercel: [https://inovedev-saas.vercel.app](https://inovedev-saas.vercel.app)
+    - Projeto rodando na Vercel: [https://saas.inovedev.com.br](https://saas.inovedev.com.br)
+
+- [x] **Domínio Personalizado (Híbrido)**
+    - [x] DNS configurado no Netlify (CNAME para `saas` e `*` apontando para Vercel).
+    - [x] Site institucional mantido no Netlify.
 
 - [x] **Middleware Vercel (Subdomínios)**
     - `middleware.ts` para reescrever URLs. Ex: `loja1.inovedev.com.br` → `/loja/loja1`.

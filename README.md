@@ -8,7 +8,7 @@
 [!Vercel](https://vercel.com)
 [!Mercado Pago](https://www.mercadopago.com.br)
 
-**🌐 Demo ao Vivo:** [https://inovedev-saas.vercel.app](https://inovedev-saas.vercel.app)
+**🌐 Acesso ao SaaS:** [https://saas.inovedev.com.br](https://saas.inovedev.com.br)
 
 O **Inove Commerce SaaS** é uma solução completa para criação de lojas virtuais, permitindo que empreendedores gerenciem seus produtos, pedidos e aparência da loja em um ambiente unificado, enquanto oferece aos clientes finais uma experiência de compra fluida e rápida.
 
