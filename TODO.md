@@ -8,15 +8,16 @@ Este documento lista as tarefas necessárias para transformar o protótipo atual
 
 - [ ] **Deploy da Edge Function `create-payment`**
     - Função já criada em `supabase/functions/create-payment`.
-    - [x] Necessário fazer o deploy para produção.
+    - Deploy realizado com sucesso.
 
-- [ ] **Integração no Frontend (`CheckoutPage`)**
+- [x] **Integração no Frontend (`CartContext`)**
     - Conectar o formulário de checkout para chamar `supabase.functions.invoke('create-payment')`.
-    - Tratar a resposta (exibir QR Code Pix ou redirecionar).
+    - Redirecionamento para o Mercado Pago implementado.
 
 - [ ] **Webhook de Notificações (`mercadopago-webhook`)**
-    - Criar nova Edge Function para receber atualizações de status do Mercado Pago.
-    - Atualizar o status do pedido na tabela `orders` (Pendente -> Pago).
+    - [x] Código criado em `supabase/functions/mercadopago-webhook`.
+    - [ ] **Pendente:** Deploy e configuração de segredos (`MP_ACCESS_TOKEN`).
+    - [ ] **Pendente:** Teste real com conta bancária (Aguardando criação da conta).
 
 ---
 
@@ -64,15 +65,15 @@ Estas tarefas são bloqueantes. A loja não funciona dinamicamente sem elas.
 ### Supabase & Edge Functions
 - [ ] **Deploy de Edge Functions**
     - [x] `create-user` (Cadastro de clientes/lojas)
-    - [ ] `create-payment` (Checkout transparente)
+    - [x] `create-payment` (Checkout Pro)
     - [ ] `mercadopago-webhook` (Atualização de status)
 
 - [ ] **Webhooks Mercado Pago**
     - Receber notificações de pagamento aprovado e atualizar status de pedido na tabela `orders`.
 
 ### Checkout
-- [ ] **Integração Real Mercado Pago**
-    - [ ] No `CheckoutPage.tsx`, ao selecionar "Mercado Pago", chamar a Edge Function `create-payment`.
+- [x] **Integração Real Mercado Pago**
+    - [x] No `CheckoutPage.tsx` (via `CartContext`), ao selecionar "Mercado Pago", chamar a Edge Function `create-payment`.
     - Exibir QR Code Pix ou link de pagamento na tela de sucesso.
 
 ---
