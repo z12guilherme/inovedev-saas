@@ -48,7 +48,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
           if (parts.length > 1 && parts[0] !== 'www') slug = parts[0];
         } else {
           // tenant.domain.com (ignora www e app)
-          if (parts.length > 2 && !['www', 'app'].includes(parts[0])) {
+          if (parts.length > 2 && !['www', 'app', 'saas', 'admin'].includes(parts[0])) {
             slug = parts[0];
           }
         }
