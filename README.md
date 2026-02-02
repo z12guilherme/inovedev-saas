@@ -1,105 +1,126 @@
 --- c/Users/Padrão/Desktop/inovedev-saas/README.md
-+++ c/Users/Padrão/Desktop/inovedev-saas/README.md
-@@ -1,60 +1,40 @@
--# Welcome to your Lovable project
-+# Inove Commerce SaaS
- 
--## Project info
-+Plataforma SaaS de e-commerce multi-tenant, permitindo que lojistas criem suas lojas virtuais personalizadas com checkout integrado (WhatsApp e Mercado Pago).
- 
--**URL**: https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID
-+## 🚀 Tecnologias
- 
--## How can I edit this code?
-+- **Frontend:** React, Vite, TypeScript, Tailwind CSS, shadcn/ui
-+- **Backend:** Supabase (Auth, Database, Storage, Edge Functions)
-+- **Pagamentos:** Integração com Mercado Pago (Pix e Cartão)
-+- **Deploy:** Vercel (com suporte a subdomínios)
- 
--There are several ways of editing your application.
-+## 🛠️ Configuração Local
- 
--**Use Lovable**
-+1. **Clone o repositório**
-+```sh
-+git clone <URL_DO_REPO>
-+cd inovedev-saas
-+```
- 
--Simply visit the Lovable Project and start prompting.
-+2. **Instale as dependências**
-+```sh
-+npm install
-+```
- 
--Changes made via Lovable will be committed automatically to this repo.
-+3. **Configure as variáveis de ambiente**
-+Crie um arquivo `.env` na raiz com suas credenciais do Supabase:
-+```env
-+VITE_SUPABASE_URL=sua_url_supabase
-+VITE_SUPABASE_PUBLISHABLE_KEY=sua_key_anonima
-+```
- 
--**Use your preferred IDE**
-+4. **Inicie o servidor de desenvolvimento**
-+```sh
-+npm run dev
-+```
- 
--If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
-+## 📋 Roadmap
- 
--The only requirement is having Node.js & npm installed - install with nvm
--
--Follow these steps:
--
--```sh
--# Step 1: Clone the repository using the project's Git URL.
--git clone <YOUR_GIT_URL>
--
--# Step 2: Navigate to the project directory.
--cd <YOUR_PROJECT_NAME>
--
--# Step 3: Install the necessary dependencies.
--npm i
--
--# Step 4: Start the development server with auto-reloading and an instant preview.
--npm run dev
--```
--
--**Edit a file directly in GitHub**
--
--- Navigate to the desired file(s).
--- Click the "Edit" button (pencil icon) at the top right of the file view.
--- Make your changes and commit the changes.
--
--**Use GitHub Codespaces**
--
--- Navigate to the main page of your repository.
--- Click on the "Code" button (green button) near the top right.
--- Select the "Codespaces" tab.
--- Click on "New codespace" to launch a new Codespace environment.
--- Edit files directly within the Codespace and commit and push your changes once you're done.
--
--## What technologies are used for this project?
--
--This project is built with:
--
--- Vite
--- TypeScript
--- React
--- shadcn-ui
--- Tailwind CSS
--
--## How can I deploy this project?
--
--Simply open Lovable and click on Share -> Publish.
--
--## Can I connect a custom domain to my Lovable project?
--
--Yes, you can!
--
--To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
--
--Read more here: Setting up a custom domain
-+Consulte o arquivo `TODO.md` para ver o status atual e as próximas tarefas.
+# 🚀 Inove Commerce SaaS
+
+> Plataforma de e-commerce White-label e Multi-tenant moderna, escalável e pronta para o mercado.
+
+[!React](https://react.dev)
+[!TypeScript](https://www.typescriptlang.org/)
+[!Supabase](https://supabase.com)
+[!Vercel](https://vercel.com)
+[!Mercado Pago](https://www.mercadopago.com.br)
+
+O **Inove Commerce SaaS** é uma solução completa para criação de lojas virtuais, permitindo que empreendedores gerenciem seus produtos, pedidos e aparência da loja em um ambiente unificado, enquanto oferece aos clientes finais uma experiência de compra fluida e rápida.
+
+---
+
+## ✨ Funcionalidades Principais
+
+### 🛍️ Para o Cliente Final (Storefront)
+- **Navegação Rápida:** SPA otimizado com Vite.
+- **Checkout Transparente:** Integração nativa com Mercado Pago (Pix e Cartão) e pedidos via WhatsApp.
+- **Carrinho Inteligente:** Persistência local e cálculo de frete/total em tempo real.
+- **Design Responsivo:** Interface mobile-first adaptável a qualquer dispositivo.
+
+### 🏢 Para o Lojista (Admin)
+- **Dashboard Intuitivo:** Visão geral de vendas, pedidos e métricas.
+- **Gestão de Produtos:** Controle de estoque, variações, imagens e categorias.
+- **Construtor Visual:** Personalização da aparência da loja (Banners, Cores, Seções).
+- **Multi-tenant:** Cada loja possui seu próprio subdomínio (ex: `loja1.inovedev.com.br`) e dados isolados.
+
+### ⚙️ Backend & Infraestrutura
+- **Supabase:** Banco de dados PostgreSQL, Autenticação e Storage.
+- **Edge Functions:** Processamento serverless para checkout seguro e webhooks.
+- **Middleware Vercel:** Roteamento dinâmico de subdomínios.
+
+---
+
+## 🛠️ Tecnologias Utilizadas
+
+- **Frontend:** React, TypeScript, Tailwind CSS, shadcn/ui, Lucide Icons.
+- **State Management:** React Context API (StoreContext, CartContext).
+- **Backend:** Supabase (Database, Auth, Storage, Edge Functions).
+- **Pagamentos:** SDK Mercado Pago.
+- **Deploy:** Vercel.
+
+---
+
+## 🚀 Como Executar o Projeto
+
+### Pré-requisitos
+- Node.js 18+
+- Conta no Supabase
+- Conta no Mercado Pago (para checkout)
+
+### 1. Clone o repositório
+```bash
+git clone https://github.com/seu-usuario/inovedev-saas.git
+cd inovedev-saas
+```
+
+### 2. Instale as dependências
+```bash
+npm install
+```
+
+### 3. Configuração de Variáveis de Ambiente
+Crie um arquivo `.env.local` na raiz do projeto com as seguintes chaves:
+
+```env
+# Supabase
+VITE_SUPABASE_URL=sua_url_supabase
+VITE_SUPABASE_ANON_KEY=sua_key_anonima
+SUPABASE_SERVICE_ROLE_KEY=sua_service_role_key # Apenas para Edge Functions locais
+
+# Configuração de Domínio
+NEXT_PUBLIC_ROOT_DOMAIN=localhost:3000 # ou seu dominio em produção
+
+# Mercado Pago (Opcional para dev)
+MP_ACCESS_TOKEN=seu_access_token_mp
+```
+
+### 4. Execute o projeto
+```bash
+npm run dev
+```
+Acesse `http://localhost:3000` para a landing page ou `http://loja1.localhost:3000` para simular uma loja (necessário configurar hosts locais ou usar roteamento manual).
+
+---
+
+## 📂 Estrutura do Projeto
+
+```
+inovedev-saas/
+├── src/
+│   ├── components/     # Componentes UI reutilizáveis (Admin, Storefront, UI)
+│   ├── contexts/       # Gestão de estado (Cart, Store, Auth)
+│   ├── integrations/   # Clientes externos (Supabase)
+│   ├── pages/          # Rotas da aplicação
+│   │   ├── admin/      # Painel do Lojista
+│   │   └── ...         # Storefront e Landing Page
+│   └── types/          # Definições de tipos TypeScript
+├── supabase/
+│   ├── functions/      # Edge Functions (create-payment, create-user)
+│   └── migrations/     # Schemas do Banco de Dados
+└── middleware.ts       # Roteamento de Subdomínios (Edge Middleware)
+```
+
+---
+
+## 🗺️ Roadmap
+
+Confira o arquivo TODO.md para acompanhar o desenvolvimento das próximas features, como:
+- [ ] Webhooks de notificação de pagamento.
+- [ ] Planos de assinatura SaaS.
+- [ ] Melhorias no SEO dinâmico.
+
+---
+
+## 📄 Licença
+
+Este projeto está sob a licença MIT. Veja o arquivo LICENSE para mais detalhes.
+
+---
+
+<div align="center">
+  <sub>Desenvolvido com ❤️ pela equipe Inove Dev</sub>
+</div>
