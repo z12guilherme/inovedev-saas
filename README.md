@@ -1,4 +1,3 @@
---- c/Users/Padrão/Desktop/inovedev-saas/README.md
 # 🚀 Inove Commerce SaaS
 
 > Plataforma de e-commerce White-label e Multi-tenant moderna, escalável e pronta para o mercado.
