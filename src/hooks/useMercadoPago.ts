@@ -39,12 +39,12 @@ export function useMercadoPago() {
     try {
       const response = await supabase.functions.invoke('create-payment', {
         body: {
-          store_id: params.storeId,
-          order_id: params.orderId,
+          storeId: params.storeId,
+          orderId: params.orderId,
           items: params.items,
           payer: params.payer,
-          delivery_fee: params.deliveryFee,
-          redirect_url: params.redirectUrl
+          deliveryFee: params.deliveryFee,
+          // redirectUrl não é usado diretamente na edge function atual, ela usa backUrls ou gera automático
         }
       });
 

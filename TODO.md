@@ -7,8 +7,8 @@ Este documento lista as tarefas necessárias para transformar o protótipo atual
 ## 🚀 Próximos Passos Imediatos (Foco: Pagamentos)
 
 - [ ] **Deploy da Edge Function `create-payment`**
-    - Função já criada em `supabase/functions/create-payment`.
-    - Deploy realizado com sucesso...
+    - [x] Função atualizada para suportar "Modo Simulação" (Sandbox Local).
+    - [ ] Realizar deploy atualizado: `npx supabase functions deploy create-payment`.
 
 - [x] **Integração no Frontend (`CartContext`)**
     - Conectar o formulário de checkout para chamar `supabase.functions.invoke('create-payment')`.
@@ -17,7 +17,8 @@ Este documento lista as tarefas necessárias para transformar o protótipo atual
 - [ ] **Webhook de Notificações (`mercadopago-webhook`)**
     - [x] Código criado em `supabase/functions/mercadopago-webhook`.
     - [ ] **Pendente:** Deploy e configuração de segredos (`MP_ACCESS_TOKEN`).
-    - [ ] **Pendente:** Teste real com conta bancária (Aguardando criação da conta).
+    - [x] **Credenciais:** Chaves de teste obtidas (`APP_USR...`).
+    - [ ] **Pendente:** Inserir no Admin e realizar compra de teste.
 
 ---
 
@@ -73,7 +74,7 @@ Estas tarefas são bloqueantes. A loja não funciona dinamicamente sem elas.
 
 ### Checkout
 - [x] **Integração Real Mercado Pago**
-    - [x] No `CheckoutPage.tsx` (via `CartContext`), ao selecionar "Mercado Pago", chamar a Edge Function `create-payment`.
+    - [x] Implementado modo Mock/Sandbox na Edge Function para testes sem conta MP.
     - Exibir QR Code Pix ou link de pagamento na tela de sucesso.
 
 ---

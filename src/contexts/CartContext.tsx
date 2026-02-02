@@ -19,7 +19,7 @@ interface CartContextType {
 const CartContext = createContext<CartContextType | undefined>(undefined);
 
 export function CartProvider({ children }: { children: ReactNode }) {
-  const { store } = useStore();
+  const { store, config } = useStore();
   const [items, setItems] = useState<CartItem[]>([]);
   const [isCheckingOut, setIsCheckingOut] = useState(false);
 
@@ -87,34 +87,26 @@ export function CartProvider({ children }: { children: ReactNode }) {
 
     setIsCheckingOut(true);
 
+    const deliveryFee = config?.deliveryFee || 0;
+
     try {
-      // 1. Criar Pedido no Banco de Dados
-      const { data: order, error: orderError } = await supabase
-        .from('orders')
-        .insert({
-          store_id: store.id,
-          customer_name: customer.name,
-          customer_phone: customer.phone,
-          customer_address: customer.address,
-          customer_neighborhood: customer.neighborhood,
-          customer_city: customer.city,
-          customer_complement: customer.complement || null,
-          customer_reference: customer.reference || null,
-          payment_method: paymentMethod,
-          subtotal: total,
-          delivery_fee: config?.deliveryFee || 0,
-          total: total + (config?.deliveryFee || 0),
-          status: 'pending',
-          payment_status: 'pending'
-        })
-        .select()
-        .single();
+      // Preparar payloads para a RPC
+      const orderPayload = {
+        store_id: store.id,
+        customer_name: customer.name,
+        customer_phone: customer.phone,
+        customer_address: customer.address,
+        customer_neighborhood: customer.neighborhood,
+        customer_city: customer.city,
+        customer_complement: customer.complement || null,
+        customer_reference: customer.reference || null,
+        payment_method: paymentMethod,
+        subtotal: total,
+        delivery_fee: deliveryFee,
+        total: total + deliveryFee
+      };
 
-      if (orderError) throw orderError;
-
-      // 2. Criar Itens do Pedido
-      const orderItems = items.map(item => ({
-        order_id: order.id,
+      const itemsPayload = items.map(item => ({
         product_id: item.product.id,
         product_name: item.product.name,
         quantity: item.quantity,
@@ -122,11 +114,19 @@ export function CartProvider({ children }: { children: ReactNode }) {
         total_price: item.product.price * item.quantity
       }));
 
-      const { error: itemsError } = await supabase
-        .from('order_items')
-        .insert(orderItems);
+      // 1. Chamar função segura no banco (Cria Pedido + Itens)
+      const { data: orderData, error: orderError } = await supabase.rpc('create_complete_order', {
+        order_payload: orderPayload,
+        items_payload: itemsPayload
+      });
 
-      if (itemsError) throw itemsError;
+      if (orderError) throw orderError;
+
+      // Objeto de pedido simplificado para uso local
+      const order = {
+        id: orderData.id,
+        order_number: orderData.order_number
+      };
 
       if (paymentMethod === 'mercadopago') {
         const { data, error } = await supabase.functions.invoke('create-payment', {
@@ -140,7 +140,11 @@ export function CartProvider({ children }: { children: ReactNode }) {
             })),
             storeId: store.id,
             orderId: order.id, // Vincula o pagamento ao pedido criado
-            customer, // Enviando dados do cliente (mesmo que a Edge Function ainda não use tudo)
+            deliveryFee: deliveryFee,
+            payer: {
+              name: customer.name,
+              phone: customer.phone?.replace(/\D/g, '') // Remove formatação para enviar apenas números
+            },
             backUrls: {
                 success: window.location.origin + '/sucesso',
                 failure: window.location.origin + '/erro',
@@ -150,6 +154,15 @@ export function CartProvider({ children }: { children: ReactNode }) {
         });
 
         if (error) throw error;
+
+        // CRÍTICO: Salvar o ID da preferência no pedido para o Webhook identificar depois
+        if (data?.preferenceId) {
+          await supabase
+            .from('orders')
+            .update({ mercadopago_preference_id: data.preferenceId })
+            .eq('id', order.id);
+        }
+
         if (data?.initPoint) {
             return data.initPoint; // Retorna a URL para redirecionamento
         }
