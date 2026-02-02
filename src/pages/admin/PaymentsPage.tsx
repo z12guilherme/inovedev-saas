@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Save, CreditCard, QrCode, Banknote, AlertCircle, Check, ExternalLink } from 'lucide-react';
+import { Save, CreditCard, QrCode, Banknote, AlertCircle, Check, ExternalLink, HelpCircle, PlayCircle, AlertTriangle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -12,6 +12,12 @@ import { AdminLayout } from '@/components/admin/AdminLayout';
 import { useAdmin } from '@/contexts/AdminContext';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
 
 export default function PaymentsPage() {
   const { store, settings, refreshStore } = useAdmin();
@@ -229,21 +235,75 @@ export default function PaymentsPage() {
 
               {formData.mercadopago_enabled && (
                 <div className="space-y-4 pt-4">
-                  <Alert>
-                    <AlertCircle className="h-4 w-4" />
-                    <AlertDescription>
-                      Para obter suas credenciais, acesse o{' '}
-                      <a 
-                        href="https://www.mercadopago.com.br/developers/panel/app" 
-                        target="_blank" 
-                        rel="noopener noreferrer"
-                        className="font-medium underline"
-                      >
-                        Painel de Desenvolvedores
-                      </a>
-                      {' '}do Mercado Pago.
-                    </AlertDescription>
-                  </Alert>
+                  {/* Manual de Integração Integrado */}
+                  <Accordion type="single" collapsible className="w-full border rounded-lg bg-blue-50/50 border-blue-100">
+                    <AccordionItem value="guide" className="border-b-0">
+                      <AccordionTrigger className="px-4 py-3 hover:no-underline group">
+                        <div className="flex items-center gap-2 text-sm font-medium text-blue-700 group-hover:text-blue-800">
+                          <HelpCircle className="h-4 w-4" />
+                          Como obter minhas credenciais do Mercado Pago?
+                        </div>
+                      </AccordionTrigger>
+                      <AccordionContent className="px-4 pb-4 text-sm text-muted-foreground space-y-4">
+                        <div className="grid gap-6 md:grid-cols-2">
+                          <div className="space-y-4">
+                            <div className="space-y-2">
+                              <h4 className="font-semibold text-foreground flex items-center gap-2">
+                                <span className="flex items-center justify-center w-6 h-6 rounded-full bg-blue-100 text-blue-700 text-xs font-bold">1</span>
+                                Criar Aplicação
+                              </h4>
+                              <p className="pl-8 text-xs leading-relaxed">
+                                Acesse o <a href="https://www.mercadopago.com.br/developers/panel/app" target="_blank" rel="noopener noreferrer" className="text-blue-600 underline hover:text-blue-800 font-medium">Painel de Desenvolvedores</a>.
+                                Clique em <strong>"Criar aplicação"</strong> e selecione a opção <strong>"Checkout Pro"</strong>.
+                              </p>
+                            </div>
+
+                            <div className="space-y-2">
+                              <h4 className="font-semibold text-foreground flex items-center gap-2">
+                                <span className="flex items-center justify-center w-6 h-6 rounded-full bg-blue-100 text-blue-700 text-xs font-bold">2</span>
+                                Ativar Credenciais
+                              </h4>
+                              <p className="pl-8 text-xs leading-relaxed">
+                                No menu lateral da sua aplicação, vá em <strong>"Credenciais de Produção"</strong>.
+                                Você precisará ativar as credenciais preenchendo o formulário de "Indústria" e "Site".
+                              </p>
+                            </div>
+                          </div>
+
+                          <div className="space-y-4">
+                            <div className="space-y-2">
+                              <h4 className="font-semibold text-foreground flex items-center gap-2">
+                                <span className="flex items-center justify-center w-6 h-6 rounded-full bg-blue-100 text-blue-700 text-xs font-bold">3</span>
+                                Copiar Chaves
+                              </h4>
+                              <p className="pl-8 text-xs leading-relaxed">
+                                Copie a <strong>Public Key</strong> e o <strong>Access Token</strong>.
+                                Cole nos campos abaixo e clique em Salvar.
+                              </p>
+                            </div>
+
+                            <div className="bg-yellow-50 border border-yellow-200 rounded-md p-3 text-xs text-yellow-800">
+                              <div className="flex items-center gap-2 font-bold mb-1">
+                                <AlertTriangle className="h-3 w-3" />
+                                Importante:
+                              </div>
+                              Não use as "Credenciais de Teste" se quiser vender de verdade. Use as de <strong>Produção</strong>.
+                            </div>
+                          </div>
+                        </div>
+                        
+                        <div className="bg-white p-3 rounded-md text-xs border border-blue-100 flex items-center gap-3 shadow-sm">
+                          <PlayCircle className="h-8 w-8 text-blue-600 flex-shrink-0" />
+                          <div>
+                            <strong className="text-blue-900">Precisa de ajuda visual?</strong><br/>
+                            <a href="https://www.youtube.com/results?search_query=como+pegar+credenciais+mercado+pago" target="_blank" rel="noopener noreferrer" className="underline text-blue-600 hover:text-blue-800">
+                              Assista a um tutorial no YouTube
+                            </a>
+                          </div>
+                        </div>
+                      </AccordionContent>
+                    </AccordionItem>
+                  </Accordion>
 
                   <div className="space-y-2">
                     <Label htmlFor="mp_public_key">Public Key</Label>
