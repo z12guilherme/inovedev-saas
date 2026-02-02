@@ -8,7 +8,7 @@ Este documento lista as tarefas necessárias para transformar o protótipo atual
 
 - [ ] **Deploy da Edge Function `create-payment`**
     - Função já criada em `supabase/functions/create-payment`.
-    - Deploy realizado com sucesso.
+    - Deploy realizado com sucesso...
 
 - [x] **Integração no Frontend (`CartContext`)**
     - Conectar o formulário de checkout para chamar `supabase.functions.invoke('create-payment')`.
