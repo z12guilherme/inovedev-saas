@@ -155,14 +155,6 @@ export function CartProvider({ children }: { children: ReactNode }) {
 
         if (error) throw error;
 
-        // CRÍTICO: Salvar o ID da preferência no pedido para o Webhook identificar depois
-        if (data?.preferenceId) {
-          await supabase
-            .from('orders')
-            .update({ mercadopago_preference_id: data.preferenceId })
-            .eq('id', order.id);
-        }
-
         if (data?.initPoint) {
             return data.initPoint; // Retorna a URL para redirecionamento
         }

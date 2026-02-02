@@ -21,6 +21,29 @@ serve(async (req) => {
 
     const { items, storeId, backUrls, orderId, payer, deliveryFee } = await req.json()
 
+    console.log('📦 Payload recebido:', { storeId, orderId, backUrls }); // Debug
+
+    // Garantir URLs de retorno válidas para evitar erro "auto_return invalid"
+    let origin = req.headers.get('origin');
+    // Tratar caso onde origin é "null" (comum em chamadas locais) ou vazio
+    if (!origin || origin === 'null') {
+      origin = 'http://localhost:3000';
+    }
+
+    // Função auxiliar para garantir URL válida
+    const getValidUrl = (url: string | undefined, path: string) => {
+      if (url && url.startsWith('http')) return url;
+      return `${origin.replace(/\/$/, '')}${path}`; // Remove barra final do origin se houver
+    };
+
+    const finalBackUrls = {
+      success: getValidUrl(backUrls?.success, '/sucesso'), // Obrigatório para auto_return
+      failure: getValidUrl(backUrls?.failure, '/erro'),
+      pending: getValidUrl(backUrls?.pending, '/pendente'),
+    };
+    
+    console.log('🔗 URLs de Retorno:', finalBackUrls); // Debug
+
     // 1. Buscar configurações da loja para obter o Access Token
     const { data: settings, error: settingsError } = await supabaseClient
       .from('store_settings')
@@ -55,38 +78,45 @@ serve(async (req) => {
     const supabaseUrl = Deno.env.get('SUPABASE_URL') ?? '';
     const notificationUrl = `${supabaseUrl}/functions/v1/mercadopago-webhook?store_id=${storeId}`;
 
+    const preferenceBody = {
+      external_reference: orderId,
+      payer: payer ? {
+        name: payer.name,
+        email: payer.email && payer.email.includes('@') ? payer.email : undefined, // Validação básica de email
+        phone: payer.phone && payer.phone.length >= 10 ? {
+          area_code: payer.phone.substring(0, 2),
+          number: payer.phone.substring(2)
+        } : undefined
+      } : undefined,
+      items: items.map((item: any) => ({
+        id: item.id,
+        title: item.name,
+        quantity: Number(item.quantity),
+        unit_price: Number(item.price),
+        currency_id: 'BRL',
+        picture_url: item.image
+      })),
+      shipments: deliveryFee ? {
+        cost: Number(deliveryFee),
+        mode: 'not_specified',
+      } : undefined,
+      notification_url: notificationUrl,
+      back_urls: finalBackUrls,
+      auto_return: 'approved',
+    };
+
+    console.log('🚀 Enviando para Mercado Pago:', JSON.stringify(preferenceBody)); // Debug
+
     // 3. Criar Preferência
-    const result = await preference.create({
-      body: {
-        external_reference: orderId, // Vincula o pagamento ao pedido no nosso banco
-        payer: payer ? {
-          name: payer.name,
-          phone: payer.phone ? {
-            area_code: payer.phone.substring(0, 2),
-            number: payer.phone.substring(2)
-          } : undefined
-        } : undefined,
-        items: items.map((item: any) => ({
-          id: item.id,
-          title: item.name,
-          quantity: Number(item.quantity),
-          unit_price: Number(item.price),
-          currency_id: 'BRL',
-          picture_url: item.image
-        })),
-        shipments: deliveryFee ? {
-          cost: Number(deliveryFee),
-          mode: 'not_specified',
-        } : undefined,
-        notification_url: notificationUrl, // O Mercado Pago vai notificar aqui
-        back_urls: backUrls || {
-          success: `${req.headers.get('origin')}/sucesso`,
-          failure: `${req.headers.get('origin')}/erro`,
-          pending: `${req.headers.get('origin')}/pendente`,
-        },
-        auto_return: 'approved',
-      }
-    })
+    const result = await preference.create({ body: preferenceBody })
+
+    // 4. Atualizar o pedido com o ID da preferência (Seguro via Service Role)
+    if (orderId && result.id) {
+      await supabaseClient
+        .from('orders')
+        .update({ mercadopago_preference_id: result.id })
+        .eq('id', orderId)
+    }
 
     return new Response(
       JSON.stringify({ preferenceId: result.id, initPoint: result.init_point }),
@@ -94,6 +124,7 @@ serve(async (req) => {
     )
 
   } catch (error) {
+    console.error('Payment creation error:', error); // Log para debug no Supabase
     return new Response(
       JSON.stringify({ error: error.message }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }

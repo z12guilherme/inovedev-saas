@@ -45,13 +45,15 @@ interface AdminContextType {
 const AdminContext = createContext<AdminContextType | undefined>(undefined);
 
 export function AdminProvider({ children }: { children: ReactNode }) {
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const [store, setStore] = useState<Store | null>(null);
   const [settings, setSettings] = useState<StoreSettings | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   const fetchStore = async () => {
+    if (authLoading) return; // Aguarda a autenticação carregar antes de decidir
+
     if (!user) {
       setStore(null);
       setSettings(null);
@@ -113,7 +115,7 @@ export function AdminProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     fetchStore();
-  }, [user]);
+  }, [user, authLoading]);
 
   const refreshStore = async () => {
     await fetchStore();

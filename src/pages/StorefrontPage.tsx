@@ -849,32 +849,22 @@ function CheckoutView({ store, settings, cart, cartTotal, onClearCart }: {
 
     try {
       // Create order in database first
-      const { data: order, error: orderError } = await supabase
-        .from('orders')
-        .insert({
-          store_id: store.id,
-          customer_name: formData.name,
-          customer_phone: formData.phone,
-          customer_address: formData.address,
-          customer_neighborhood: formData.neighborhood,
-          customer_city: formData.city,
-          customer_complement: formData.complement || null,
-          customer_reference: formData.reference || null,
-          payment_method: paymentMethod,
-          subtotal: cartTotal,
-          delivery_fee: Number(settings?.delivery_fee || 0),
-          total: grandTotal,
-          status: 'pending',
-          payment_status: 'pending'
-        })
-        .select()
-        .single();
+      const orderPayload = {
+        store_id: store.id,
+        customer_name: formData.name,
+        customer_phone: formData.phone,
+        customer_address: formData.address,
+        customer_neighborhood: formData.neighborhood,
+        customer_city: formData.city,
+        customer_complement: formData.complement || null,
+        customer_reference: formData.reference || null,
+        payment_method: paymentMethod,
+        subtotal: cartTotal,
+        delivery_fee: Number(settings?.delivery_fee || 0),
+        total: grandTotal
+      };
 
-      if (orderError) throw orderError;
-
-      // Add order items
-      const orderItems = cart.map(item => ({
-        order_id: order.id,
+      const itemsPayload = cart.map(item => ({
         product_id: item.product.id,
         product_name: item.product.name,
         quantity: item.quantity,
@@ -882,31 +872,54 @@ function CheckoutView({ store, settings, cart, cartTotal, onClearCart }: {
         total_price: Number(item.product.price) * item.quantity
       }));
 
-      await supabase.from('order_items').insert(orderItems);
+      const { data: orderData, error: orderError } = await supabase.rpc('create_complete_order', {
+        order_payload: orderPayload,
+        items_payload: itemsPayload
+      });
+
+      if (orderError) throw orderError;
+
+      const order = { id: orderData.id, order_number: orderData.order_number };
 
       // If Mercado Pago is enabled and selected
       if (paymentMethod === 'mercadopago' && isMercadoPagoEnabled) {
+        // Sanitizar telefone (remover caracteres não numéricos) para evitar erro 400 na Edge Function
+        const cleanPhone = formData.phone.replace(/\D/g, '');
+
         const paymentResponse = await supabase.functions.invoke('create-payment', {
           body: {
-            store_id: store.id,
-            order_id: order.id,
+            storeId: store.id,
+            orderId: order.id,
             items: cart.map(item => ({
-              title: item.product.name,
+              id: item.product.id,
+              name: item.product.name,
+              price: Number(item.product.price),
+              image: item.product.image_url || undefined, // Evita enviar null para o MP
               quantity: item.quantity,
-              unit_price: Number(item.product.price)
             })),
             payer: {
               name: formData.name,
               email: formData.email || undefined,
-              phone: formData.phone
+              phone: cleanPhone
             },
-            delivery_fee: Number(settings?.delivery_fee || 0),
-            redirect_url: `${window.location.origin}/loja/${store.slug}`
+            deliveryFee: Number(settings?.delivery_fee || 0),
+            backUrls: {
+              success: `${window.location.origin}/sucesso`,
+              failure: `${window.location.origin}/erro`,
+              pending: `${window.location.origin}/pendente`
+            }
           }
         });
 
-        if (paymentResponse.data?.init_point) {
-          window.location.href = paymentResponse.data.init_point;
+        if (paymentResponse.error) {
+          console.error('Payment error:', paymentResponse.error);
+          toast.error('Erro ao iniciar pagamento');
+          setSubmitting(false);
+          return;
+        }
+
+        if (paymentResponse.data?.initPoint) {
+          window.location.href = paymentResponse.data.initPoint;
           return;
         }
       }
@@ -969,6 +982,10 @@ function CheckoutView({ store, settings, cart, cartTotal, onClearCart }: {
                     <div>
                       <Label>WhatsApp *</Label>
                       <Input value={formData.phone} onChange={e => setFormData({ ...formData, phone: e.target.value })} required />
+                    </div>
+                    <div className="sm:col-span-2">
+                      <Label>Email (Opcional)</Label>
+                      <Input type="email" value={formData.email} onChange={e => setFormData({ ...formData, email: e.target.value })} placeholder="Para receber o comprovante" />
                     </div>
                   </div>
                 </CardContent>

@@ -37,6 +37,9 @@ Estas tarefas são bloqueantes. A loja não funciona dinamicamente sem elas.
 - [x] **Persistência de Imagens**
     - O upload de imagens no Admin funciona, mas o frontend precisa resolver as URLs corretamente do Supabase Storage (bucket `store-assets`).
 
+- [x] **Correção de Permissões (RLS)**
+    - Criada função RPC `create_complete_order` para permitir criação de pedidos por usuários anônimos sem erro 401.
+
 ---
 
 ## 1️⃣ Frontend (Storefront & Admin)
