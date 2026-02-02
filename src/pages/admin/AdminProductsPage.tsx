@@ -10,6 +10,7 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
+  DialogDescription,
 } from '@/components/ui/dialog';
 import {
   AlertDialog,
@@ -268,6 +269,9 @@ export default function AdminProductsPage() {
                 <DialogTitle>
                   {editingProduct ? 'Editar Produto' : 'Novo Produto'}
                 </DialogTitle>
+                <DialogDescription>
+                  Preencha as informações do produto abaixo.
+                </DialogDescription>
               </DialogHeader>
               <form onSubmit={handleSubmit} className="space-y-4">
                 {/* Image Upload */}

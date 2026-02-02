@@ -8,7 +8,8 @@ import {
   LogOut,
   Store,
   FolderOpen,
-  Menu
+  Menu,
+  Users
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
@@ -21,22 +22,25 @@ interface AdminLayoutProps {
 
 import { CreditCard, Palette, FileBarChart } from 'lucide-react';
 
-const navItems = [
-  { icon: LayoutDashboard, label: 'Dashboard', path: '/admin' },
-  { icon: Package, label: 'Produtos', path: '/admin/produtos' },
-  { icon: FolderOpen, label: 'Categorias', path: '/admin/categorias' },
-  { icon: ShoppingCart, label: 'Pedidos', path: '/admin/pedidos' },
-  { icon: Palette, label: 'Construtor', path: '/admin/construtor' },
-  { icon: CreditCard, label: 'Pagamentos', path: '/admin/pagamentos' },
-  { icon: FileBarChart, label: 'Relatórios', path: '/admin/relatorios' },
-  { icon: Settings, label: 'Configurações', path: '/admin/configuracoes' },
-];
-
 export function AdminLayout({ children }: AdminLayoutProps) {
   const location = useLocation();
   const navigate = useNavigate();
-  const { signOut } = useAuth();
+  const { signOut, user } = useAuth();
   const { store } = useAdmin();
+
+  const isRoot = user?.email === 'mguimarcos39@gmail.com';
+
+  const navItems = [
+    { icon: LayoutDashboard, label: 'Dashboard', path: '/admin' },
+    ...(isRoot ? [{ icon: Users, label: 'Clientes', path: '/admin/clientes' }] : []),
+    { icon: Package, label: 'Produtos', path: '/admin/produtos' },
+    { icon: FolderOpen, label: 'Categorias', path: '/admin/categorias' },
+    { icon: ShoppingCart, label: 'Pedidos', path: '/admin/pedidos' },
+    { icon: Palette, label: 'Construtor', path: '/admin/construtor' },
+    { icon: CreditCard, label: 'Pagamentos', path: '/admin/pagamentos' },
+    { icon: FileBarChart, label: 'Relatórios', path: '/admin/relatorios' },
+    { icon: Settings, label: 'Configurações', path: '/admin/configuracoes' },
+  ];
 
   const handleSignOut = async () => {
     await signOut();

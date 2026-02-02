@@ -32,6 +32,8 @@ import AdminSettingsPage from "./pages/admin/AdminSettingsPage";
 import PaymentsPage from "./pages/admin/PaymentsPage";
 import ReportsPage from "./pages/admin/ReportsPage";
 import StoreBuilderPage from "./pages/admin/StoreBuilderPage";
+import AdminRegisterClientPage from "./pages/admin/AdminRegisterClientPage";
+import AdminClientsPage from "./pages/admin/AdminClientsPage";
 
 const queryClient = new QueryClient();
 
@@ -68,6 +70,16 @@ const App = () => (
                   <Route path="/admin/criar-loja" element={
                     <ProtectedRoute>
                       <CreateStorePage />
+                    </ProtectedRoute>
+                  } />
+                  <Route path="/admin/novo-cliente" element={
+                    <ProtectedRoute>
+                      <AdminRegisterClientPage />
+                    </ProtectedRoute>
+                  } />
+                  <Route path="/admin/clientes" element={
+                    <ProtectedRoute>
+                      <AdminClientsPage />
                     </ProtectedRoute>
                   } />
                   <Route path="/admin/onboarding" element={

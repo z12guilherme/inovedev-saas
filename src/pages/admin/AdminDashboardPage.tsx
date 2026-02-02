@@ -1,12 +1,13 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Package, ShoppingCart, DollarSign, TrendingUp, ArrowRight, Share2, ExternalLink, Users, Plus } from 'lucide-react';
+import { Package, ShoppingCart, DollarSign, TrendingUp, ArrowRight, Share2, ExternalLink, Users, Plus, UserPlus } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { AdminLayout } from '@/components/admin/AdminLayout';
 import { DashboardAlerts } from '@/components/admin/DashboardAlerts';
 import { SalesChart, PaymentMethodsChart, OrdersStatusChart } from '@/components/admin/SalesChart';
 import { useAdmin } from '@/contexts/AdminContext';
+import { useAuth } from '@/contexts/AuthContext';
 import { useRealtimeNotifications } from '@/hooks/useRealtimeNotifications';
 import { supabase } from '@/integrations/supabase/client';
 import { formatCurrency } from '@/lib/utils';
@@ -34,6 +35,7 @@ interface Order {
 
 export default function AdminDashboardPage() {
   const { store, loading: storeLoading } = useAdmin();
+  const { user } = useAuth();
   const [stats, setStats] = useState<DashboardStats>({
     totalProducts: 0,
     totalOrders: 0,
@@ -46,6 +48,9 @@ export default function AdminDashboardPage() {
   const [recentOrders, setRecentOrders] = useState<Order[]>([]);
   const [allOrders, setAllOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
+
+  // Check if current user is root
+  const isRoot = user?.email === 'mguimarcos39@gmail.com';
 
   // Enable realtime notifications
   useRealtimeNotifications({ storeId: store?.id || '' });
@@ -144,6 +149,14 @@ export default function AdminDashboardPage() {
             <p className="text-muted-foreground">Aqui está o resumo da sua loja</p>
           </div>
           <div className="flex gap-2">
+            {isRoot && (
+              <Button variant="default" asChild className="bg-green-600 hover:bg-green-700">
+                <Link to="/admin/clientes">
+                  <Users className="h-4 w-4 mr-2" />
+                  Gerenciar Clientes
+                </Link>
+              </Button>
+            )}
             <Button variant="outline" asChild>
               <Link to="/admin/criar-loja">
                 <Plus className="h-4 w-4 mr-2" />

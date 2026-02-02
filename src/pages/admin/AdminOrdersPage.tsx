@@ -17,6 +17,7 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogDescription,
 } from '@/components/ui/dialog';
 import {
   AlertDialog,
@@ -307,6 +308,9 @@ export default function AdminOrdersPage() {
         <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Pedido #{selectedOrder?.order_number} {isEditing && '- Editando'}</DialogTitle>
+            <DialogDescription>
+              Detalhes completos do pedido e informações do cliente.
+            </DialogDescription>
           </DialogHeader>
           
           {selectedOrder && !isEditing && (

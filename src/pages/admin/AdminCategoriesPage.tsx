@@ -9,6 +9,7 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
+  DialogDescription,
 } from '@/components/ui/dialog';
 import {
   AlertDialog,
@@ -175,6 +176,9 @@ export default function AdminCategoriesPage() {
                 <DialogTitle>
                   {editingCategory ? 'Editar Categoria' : 'Nova Categoria'}
                 </DialogTitle>
+                <DialogDescription>
+                  Crie ou edite uma categoria para organizar seus produtos.
+                </DialogDescription>
               </DialogHeader>
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div className="space-y-2">
