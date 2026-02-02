@@ -18,7 +18,7 @@ serve(async (req) => {
     // Isso permite ignorar RLS e rate limits de cadastro público
     const supabaseAdmin = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
+      Deno.env.get('SERVICE_ROLE_KEY') ?? Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     )
 
     // Verifica se quem está chamando é um usuário autenticado (opcional, mas recomendado)
