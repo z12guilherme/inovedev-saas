@@ -59,9 +59,9 @@ const Index = () => {
             <img 
               src={heroBanner} 
               alt="Banner" 
-              className="w-full h-full object-cover opacity-50"
+              className="w-full h-full object-cover opacity-100 contrast-125 blur-sm"
             />
-            <div className="absolute inset-0 bg-gradient-to-b from-transparent via-white/60 to-white" />
+            <div className="absolute inset-0 bg-gradient-to-b from-transparent via-white/50 to-white" />
           </div>
           <div className="container text-center max-w-4xl relative z-10">
             <div className="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 border-transparent bg-primary/10 text-primary hover:bg-primary/20 mb-6">
@@ -75,7 +75,7 @@ const Index = () => {
               A plataforma completa para você vender online. Gerencie produtos, pedidos e pagamentos em um único lugar. Sem complicações.
             </p>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-              <Button size="lg" className="h-12 px-8 text-lg" asChild>
+              <Button size="lg" variant="outline" className="h-12 px-8 text-lg" asChild>
                 <Link to="/admin/criar-loja">
                   Começar Agora <ArrowRight className="ml-2 h-5 w-5" />
                 </Link>
