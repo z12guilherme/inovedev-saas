@@ -66,11 +66,9 @@ const App = () => (
                   {/* Admin routes */}
                   <Route path="/admin/login" element={<AdminAuthPage />} />
                   <Route path="/admin/criar-loja" element={
-                    <AuthProvider>
-                      <AdminProvider>
-                        <CreateStorePage />
-                      </AdminProvider>
-                    </AuthProvider>
+                    <ProtectedRoute>
+                      <CreateStorePage />
+                    </ProtectedRoute>
                   } />
                   <Route path="/admin/onboarding" element={
                     <ProtectedRoute>

@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Package, ShoppingCart, DollarSign, TrendingUp, ArrowRight, Share2, ExternalLink, Users } from 'lucide-react';
+import { Package, ShoppingCart, DollarSign, TrendingUp, ArrowRight, Share2, ExternalLink, Users, Plus } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { AdminLayout } from '@/components/admin/AdminLayout';
@@ -144,6 +144,12 @@ export default function AdminDashboardPage() {
             <p className="text-muted-foreground">Aqui está o resumo da sua loja</p>
           </div>
           <div className="flex gap-2">
+            <Button variant="outline" asChild>
+              <Link to="/admin/criar-loja">
+                <Plus className="h-4 w-4 mr-2" />
+                Criar Loja
+              </Link>
+            </Button>
             <Button variant="outline" onClick={handleShareLink}>
               <Share2 className="h-4 w-4 mr-2" />
               Compartilhar
