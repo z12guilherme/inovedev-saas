@@ -6,7 +6,7 @@ import { Footer } from '@/components/layout/Footer';
 import { ProductCard } from '@/components/product/ProductCard';
 import { CategoryCard } from '@/components/category/CategoryCard';
 import { useStore } from '@/contexts/StoreContext';
-import heroBanner from '@/assets/hero-banner.jpg';
+import heroBanner from '@/assets/banner.jpg';
 import logoImg from '@/assets/logo.jpg';
 import { LoadingScreen } from '@/components/ui/loading-screen';
 import {
@@ -54,8 +54,16 @@ const Index = () => {
         </header>
 
         {/* Hero Section */}
-        <section className="flex-1 flex flex-col justify-center py-20 md:py-32 bg-gradient-to-b from-blue-50 to-white">
-          <div className="container text-center max-w-4xl">
+        <section className="flex-1 flex flex-col justify-center py-20 md:py-32 relative overflow-hidden">
+          <div className="absolute inset-0 z-0">
+            <img 
+              src={heroBanner} 
+              alt="Banner" 
+              className="w-full h-full object-cover opacity-50"
+            />
+            <div className="absolute inset-0 bg-gradient-to-b from-transparent via-white/60 to-white" />
+          </div>
+          <div className="container text-center max-w-4xl relative z-10">
             <div className="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 border-transparent bg-primary/10 text-primary hover:bg-primary/20 mb-6">
               <Zap className="mr-1 h-3 w-3" />
               Plataforma Multi-tenant Pronta
