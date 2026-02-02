@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
-import { useParams, Link, useNavigate } from 'react-router-dom';
-import { ArrowRight, Truck, CreditCard, MessageCircle, ShieldCheck, ShoppingCart, Minus, Plus, Trash2 } from 'lucide-react';
+import { useParams, Link, useNavigate, useSearchParams } from 'react-router-dom';
+import { ArrowRight, Truck, CreditCard, MessageCircle, ShieldCheck, ShoppingCart, Minus, Plus, Trash2, CheckCircle, Clock, XCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -71,6 +71,7 @@ export default function StorefrontPage() {
   const isCategoryView = !!categorySlug;
   const isCartView = window.location.pathname.includes('/carrinho');
   const isCheckoutView = window.location.pathname.includes('/checkout');
+  const isSuccessView = window.location.pathname.includes('/sucesso');
 
   useEffect(() => {
     const fetchStoreData = async () => {
@@ -188,6 +189,16 @@ export default function StorefrontPage() {
           </Button>
         </div>
       </div>
+    );
+  }
+
+  // Success view
+  if (isSuccessView) {
+    return (
+      <SuccessView
+        store={store}
+        settings={settings}
+      />
     );
   }
 
@@ -904,9 +915,9 @@ function CheckoutView({ store, settings, cart, cartTotal, onClearCart }: {
             },
             deliveryFee: Number(settings?.delivery_fee || 0),
             backUrls: {
-              success: `${window.location.origin}/sucesso`,
-              failure: `${window.location.origin}/erro`,
-              pending: `${window.location.origin}/pendente`
+              success: `${window.location.origin}/loja/${store.slug}/sucesso`,
+              failure: `${window.location.origin}/loja/${store.slug}/sucesso`, // Redireciona para sucesso para tratar status lá
+              pending: `${window.location.origin}/loja/${store.slug}/sucesso`
             }
           }
         });
@@ -1111,6 +1122,125 @@ function CheckoutView({ store, settings, cart, cartTotal, onClearCart }: {
           </div>
         </form>
       </main>
+    </div>
+  );
+}
+
+// Success View Component
+function SuccessView({ store, settings }: { store: StoreData; settings: StoreSettings | null }) {
+  const [searchParams] = useSearchParams();
+  const [order, setOrder] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+
+  // Parâmetros retornados pelo Mercado Pago
+  const status = searchParams.get('collection_status') || searchParams.get('status');
+  const externalReference = searchParams.get('external_reference'); // Nosso ID do pedido
+  const paymentId = searchParams.get('payment_id');
+
+  useEffect(() => {
+    const fetchOrder = async () => {
+      if (!externalReference) {
+        setLoading(false);
+        return;
+      }
+
+      const { data } = await supabase
+        .from('orders')
+        .select('*')
+        .eq('id', externalReference)
+        .single();
+
+      setOrder(data);
+      setLoading(false);
+    };
+
+    fetchOrder();
+  }, [externalReference]);
+
+  const getStatusInfo = () => {
+    switch (status) {
+      case 'approved':
+        return {
+          icon: CheckCircle,
+          color: 'text-green-600',
+          bg: 'bg-green-100',
+          title: 'Pagamento Aprovado!',
+          desc: 'Seu pedido foi confirmado e já estamos preparando tudo.'
+        };
+      case 'in_process':
+      case 'pending':
+        return {
+          icon: Clock,
+          color: 'text-yellow-600',
+          bg: 'bg-yellow-100',
+          title: 'Pagamento em Análise',
+          desc: 'Estamos aguardando a confirmação do pagamento.'
+        };
+      case 'rejected':
+        return {
+          icon: XCircle,
+          color: 'text-red-600',
+          bg: 'bg-red-100',
+          title: 'Pagamento Recusado',
+          desc: 'Houve um problema com seu pagamento. Tente novamente.'
+        };
+      default:
+        return {
+          icon: CheckCircle,
+          color: 'text-primary',
+          bg: 'bg-primary/10',
+          title: 'Pedido Realizado!',
+          desc: 'Seu pedido foi enviado para a loja.'
+        };
+    }
+  };
+
+  const info = getStatusInfo();
+  const Icon = info.icon;
+
+  return (
+    <div className="min-h-screen flex flex-col items-center justify-center p-4 bg-gray-50">
+      <Card className="w-full max-w-md text-center">
+        <CardContent className="pt-12 pb-8 px-6">
+          <div className={`mx-auto w-20 h-20 rounded-full flex items-center justify-center mb-6 ${info.bg}`}>
+            <Icon className={`w-10 h-10 ${info.color}`} />
+          </div>
+          
+          <h1 className={`text-2xl font-bold mb-2 ${info.color}`}>{info.title}</h1>
+          <p className="text-muted-foreground mb-8">{info.desc}</p>
+
+          {order && (
+            <div className="bg-muted/50 rounded-lg p-4 mb-8 text-sm">
+              <p className="font-medium">Pedido #{order.order_number}</p>
+              <p className="text-muted-foreground mt-1">Total: {formatCurrency(order.total)}</p>
+              {paymentId && <p className="text-xs text-muted-foreground mt-2">Ref. Pagamento: {paymentId}</p>}
+            </div>
+          )}
+
+          <div className="space-y-3">
+            {settings?.whatsapp_number && (
+              <Button className="w-full" variant="outline" asChild>
+                <a
+                  href={`https://wa.me/${settings.whatsapp_number.replace(/\D/g, '')}?text=Olá, acabei de fazer o pedido #${order?.order_number || ''}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  <MessageCircle className="mr-2 h-4 w-4" />
+                  Acompanhar no WhatsApp
+                </a>
+              </Button>
+            )}
+            
+            <Button 
+              className="w-full" 
+              style={{ backgroundColor: settings?.primary_color || undefined }}
+              asChild
+            >
+              <Link to={`/loja/${store.slug}`}>Voltar para a Loja</Link>
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 }
