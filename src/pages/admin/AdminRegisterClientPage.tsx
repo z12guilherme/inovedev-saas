@@ -31,28 +31,24 @@ export default function AdminRegisterClientPage() {
 
     setLoading(true);
 
-    // Usando supabase diretamente para passar metadados
-    const { error } = await supabase.auth.signUp({
-      email: registerData.email,
-      password: registerData.password,
-      options: {
-        data: {
-          role: 'client' // Define o role como cliente
-        }
+    // Chama a Edge Function para criar o usuário com privilégios de admin
+    // Isso evita o rate limit e não desloga o administrador atual
+    const { error } = await supabase.functions.invoke('create-user', {
+      body: {
+        email: registerData.email,
+        password: registerData.password,
+        role: 'client'
       }
     });
     
     if (error) {
-      if (error.message.includes('already registered')) {
-        toast.error('Este email já está cadastrado');
-      } else if (error.message.includes('rate limit')) {
-        toast.error('Limite de tentativas excedido. Aguarde alguns minutos antes de cadastrar novamente.');
-      } else {
-        toast.error('Erro ao cadastrar: ' + error.message);
-      }
+      console.error('Erro ao criar usuário:', error);
+      // Tenta ler a mensagem de erro retornada pela função
+      const message = await error.context?.json().then((res: any) => res.error).catch(() => error.message);
+      toast.error('Erro ao cadastrar: ' + (message || 'Erro desconhecido'));
     } else {
-      toast.success('Cliente cadastrado com sucesso! Verifique o email para confirmar.');
-      navigate('/admin');
+      toast.success('Cliente cadastrado com sucesso!');
+      navigate('/admin/clientes');
     }
     
     setLoading(false);
