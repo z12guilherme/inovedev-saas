@@ -57,7 +57,7 @@ export default function AdminClientsPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [editingStore, setEditingStore] = useState<StoreData | null>(null);
-  const [formData, setFormData] = useState({ price: '', dueDate: '' });
+  const [formData, setFormData] = useState({ name: '', slug: '', price: '', dueDate: '' });
 
   useEffect(() => {
     if (user && user.email !== 'mguimarcos39@gmail.com') {
@@ -92,11 +92,21 @@ export default function AdminClientsPage() {
     store.slug.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
+  const generateSlug = (name: string) => {
+    return name
+      .toLowerCase()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-|-$/g, '');
+  };
+
   const handleDelete = async () => {
     if (!deleteId) return;
     const { error } = await supabase.from('stores').delete().eq('id', deleteId);
     if (error) {
-      toast.error('Erro ao excluir loja');
+      console.error('Erro ao excluir:', error);
+      toast.error('Erro ao excluir loja: ' + error.message);
     } else {
       toast.success('Loja excluída com sucesso');
       fetchStores();
@@ -107,26 +117,35 @@ export default function AdminClientsPage() {
   const handleEdit = (store: StoreData) => {
     setEditingStore(store);
     setFormData({
+      name: store.name,
+      slug: store.slug,
       price: store.subscription_price?.toString() || '',
       dueDate: store.due_date?.toString() || ''
     });
   };
 
-  const handleSaveSubscription = async () => {
+  const handleSaveStore = async () => {
     if (!editingStore) return;
     
     const price = parseFloat(formData.price);
     const dueDate = parseInt(formData.dueDate);
 
     const { error } = await supabase.from('stores').update({
+      name: formData.name,
+      slug: formData.slug,
       subscription_price: isNaN(price) ? null : price,
       due_date: isNaN(dueDate) ? null : dueDate
     }).eq('id', editingStore.id);
 
     if (error) {
-      toast.error('Erro ao atualizar assinatura');
+      console.error('Erro ao atualizar:', error);
+      if (error.message.includes('duplicate')) {
+        toast.error('Este endereço (slug) já está em uso.');
+      } else {
+        toast.error('Erro ao atualizar loja: ' + error.message);
+      }
     } else {
-      toast.success('Assinatura atualizada');
+      toast.success('Loja atualizada com sucesso');
       setEditingStore(null);
       fetchStores();
     }
@@ -239,12 +258,38 @@ export default function AdminClientsPage() {
       <Dialog open={!!editingStore} onOpenChange={(open) => !open && setEditingStore(null)}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Gerenciar Assinatura - {editingStore?.name}</DialogTitle>
+            <DialogTitle>Editar Loja - {editingStore?.name}</DialogTitle>
             <DialogDescription>
-              Defina o valor da mensalidade e o dia de vencimento para este cliente.
+              Gerencie os dados da loja e da assinatura.
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="name">Nome da Loja</Label>
+              <Input 
+                id="name" 
+                value={formData.name} 
+                onChange={(e) => {
+                  const newName = e.target.value;
+                  setFormData({
+                    ...formData, 
+                    name: newName,
+                    slug: generateSlug(newName)
+                  });
+                }}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="slug">Endereço (Slug)</Label>
+              <div className="flex items-center gap-2">
+                <span className="text-sm text-muted-foreground">/loja/</span>
+                <Input 
+                  id="slug" 
+                  value={formData.slug} 
+                  onChange={(e) => setFormData({...formData, slug: generateSlug(e.target.value)})}
+                />
+              </div>
+            </div>
             <div className="space-y-2">
               <Label htmlFor="price">Valor Mensal (R$)</Label>
               <div className="relative">
@@ -278,7 +323,7 @@ export default function AdminClientsPage() {
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setEditingStore(null)}>Cancelar</Button>
-            <Button onClick={handleSaveSubscription}>Salvar</Button>
+            <Button onClick={handleSaveStore}>Salvar</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
