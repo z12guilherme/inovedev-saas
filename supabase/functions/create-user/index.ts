@@ -55,7 +55,7 @@ serve(async (req) => {
     }
 
     // Pega os dados do corpo da requisição
-    const { email, password, role, name, storeName } = await req.json()
+    const { email, password, role, name, storeName, plan } = await req.json()
 
     if (!email || !password) {
       return new Response(
@@ -88,15 +88,33 @@ serve(async (req) => {
         .replace(/[^a-z0-9]+/g, '-')
         .replace(/^-+|-+$/g, '');
 
-      const { error: storeError } = await supabaseAdmin
+      // Inserimos e retornamos o objeto criado para pegar o ID
+      const { data: newStore, error: storeError } = await supabaseAdmin
         .from('stores')
         .insert({
           user_id: newUser.user.id,
           name: storeName || 'Nova Loja',
           slug: slug
-        });
+        })
+        .select()
+        .single();
 
-      if (storeError) console.error('Error creating store:', storeError);
+      if (storeError) {
+        console.error('Error creating store:', storeError);
+        // ROLLBACK: Se falhar ao criar a loja, deletamos o usuário do Auth para não ficar "zumbi"
+        await supabaseAdmin.auth.admin.deleteUser(newUser.user.id);
+        throw new Error(`Erro ao criar loja: ${storeError.message}. O usuário foi removido para tentar novamente.`);
+      }
+
+      // Atualiza o plano na tabela store_settings (criada automaticamente pelo trigger)
+      if (newStore && plan) {
+        const { error: settingsError } = await supabaseAdmin
+          .from('store_settings')
+          .update({ subscription_plan: plan })
+          .eq('store_id', newStore.id);
+        
+        if (settingsError) console.error('Error updating plan:', settingsError);
+      }
     }
 
     return new Response(

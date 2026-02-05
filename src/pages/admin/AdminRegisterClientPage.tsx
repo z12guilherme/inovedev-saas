@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { AdminLayout } from '@/components/admin/AdminLayout';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
@@ -23,7 +24,7 @@ export default function AdminRegisterClientPage() {
     }
   }, [user, navigate]);
 
-  const [registerData, setRegisterData] = useState({ email: '', password: '', confirmPassword: '', storeName: '' });
+  const [registerData, setRegisterData] = useState({ email: '', password: '', confirmPassword: '', storeName: '', plan: 'pro' });
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -56,7 +57,8 @@ export default function AdminRegisterClientPage() {
           password: registerData.password,
           role: 'client',
           name: registerData.storeName,
-          storeName: registerData.storeName
+          storeName: registerData.storeName,
+          plan: registerData.plan
         })
       });
 
@@ -102,6 +104,22 @@ export default function AdminRegisterClientPage() {
                   onChange={(e) => setRegisterData({ ...registerData, storeName: e.target.value })}
                   required
                 />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="plan">Plano Inicial</Label>
+                <Select 
+                  value={registerData.plan} 
+                  onValueChange={(value) => setRegisterData({ ...registerData, plan: value })}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecione um plano" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="pro">Pro (R$ 49,90)</SelectItem>
+                    <SelectItem value="enterprise">Enterprise (Sob Consulta)</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
 
               <div className="space-y-2">
