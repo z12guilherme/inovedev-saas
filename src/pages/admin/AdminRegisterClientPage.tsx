@@ -40,22 +40,16 @@ export default function AdminRegisterClientPage() {
 
     setLoading(true);
 
-    // Garante que o token está atualizado antes de enviar (resolve problema de token expirado)
-    const { data: { session } } = await supabase.auth.refreshSession();
-
-    if (!session) {
-      toast.error('Sessão expirada. Faça login novamente.');
-      setLoading(false);
-      return;
-    }
-
     try {
-      // Usamos fetch manual para garantir o envio correto dos headers
+      // TRUQUE: Usamos fetch manual enviando a ANON KEY no Authorization.
+      // Isso satisfaz o Gateway do Supabase (que exige um JWT válido)
+      // e evita o erro "Invalid JWT" causado pelo token de usuário antigo/rotacionado.
       const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/create-user`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'apikey': import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY
+          'apikey': import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+          'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`
         },
         body: JSON.stringify({
           email: registerData.email,

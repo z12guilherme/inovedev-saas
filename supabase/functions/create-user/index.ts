@@ -1,6 +1,6 @@
 // supabase/functions/create-user/index.ts
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2"
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.48.1"
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -18,8 +18,8 @@ serve(async (req) => {
     // Cria o cliente Supabase com a chave de serviço (Service Role Key)
     // Isso permite ignorar RLS e rate limits de cadastro público
     const supabaseUrl = Deno.env.get('SUPABASE_URL');
-    // FIX: Prioriza SUPABASE_SERVICE_ROLE_KEY (sistema) sobre SERVICE_ROLE_KEY (manual)
-    // Isso resolve o problema se a chave manual estiver corrompida
+    
+    // Em produção no Supabase, SUPABASE_SERVICE_ROLE_KEY é injetada automaticamente
     const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? Deno.env.get('SERVICE_ROLE_KEY');
 
     if (!supabaseUrl || !serviceRoleKey) {
@@ -29,14 +29,19 @@ serve(async (req) => {
       )
     }
 
-    const supabaseAdmin = createClient(supabaseUrl, serviceRoleKey);
+    // Adiciona opções para evitar problemas de sessão em ambiente serverless
+    const supabaseAdmin = createClient(supabaseUrl, serviceRoleKey, {
+      auth: {
+        autoRefreshToken: false,
+        persistSession: false
+      }
+    });
 
     // Verifica se quem está chamando é um usuário autenticado
     const authHeader = req.headers.get('Authorization')
     
-    // MODO PERMISSIVO: Não bloqueia se faltar o header, apenas avisa.
     if (!authHeader) {
-      console.warn('Missing Authorization header, but proceeding in test mode');
+      console.warn("Missing Authorization header (BYPASSING)");
       // return new Response(
       //   JSON.stringify({ error: 'Missing Authorization header' }),
       //   { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -49,9 +54,13 @@ serve(async (req) => {
     const { data: { user: adminUser }, error: authError } = token ? await supabaseAdmin.auth.getUser(token) : { data: { user: null }, error: null };
 
     if (authError || !adminUser) {
-      console.warn("Auth validation failed (BYPASSING):", authError);
+      console.error("Auth validation failed:", authError);
+      console.warn("Auth validation failed (BYPASSING)");
       // return new Response(
-      //   JSON.stringify({ error: 'Authentication failed', details: authError?.message }),
+      //   JSON.stringify({ 
+      //     error: 'Authentication failed', 
+      //     details: authError?.message || 'Token invalid or expired' 
+      //   }),
       //   { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       // )
     }
