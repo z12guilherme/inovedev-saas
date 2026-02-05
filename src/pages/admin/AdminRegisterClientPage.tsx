@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Eye, EyeOff, UserPlus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -6,15 +6,24 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { AdminLayout } from '@/components/admin/AdminLayout';
+import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
 export default function AdminRegisterClientPage() {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   
-  const [registerData, setRegisterData] = useState({ email: '', password: '', confirmPassword: '' });
+  useEffect(() => {
+    if (user && user.email !== 'mguimarcos39@gmail.com') {
+      toast.error('Acesso restrito ao administrador.');
+      navigate('/admin');
+    }
+  }, [user, navigate]);
+
+  const [registerData, setRegisterData] = useState({ email: '', password: '', confirmPassword: '', storeName: '' });
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -31,27 +40,47 @@ export default function AdminRegisterClientPage() {
 
     setLoading(true);
 
-    // Chama a Edge Function para criar o usuário com privilégios de admin
-    // Isso evita o rate limit e não desloga o administrador atual
-    const { error } = await supabase.functions.invoke('create-user', {
-      body: {
-        email: registerData.email,
-        password: registerData.password,
-        role: 'client'
+    // Garante que o token está atualizado antes de enviar (resolve problema de token expirado)
+    const { data: { session } } = await supabase.auth.refreshSession();
+
+    if (!session) {
+      toast.error('Sessão expirada. Faça login novamente.');
+      setLoading(false);
+      return;
+    }
+
+    try {
+      // Usamos fetch manual para garantir o envio correto dos headers
+      const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/create-user`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'apikey': import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY
+        },
+        body: JSON.stringify({
+          email: registerData.email,
+          password: registerData.password,
+          role: 'client',
+          name: registerData.storeName,
+          storeName: registerData.storeName
+        })
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || data.details || data.message || `Erro ${response.status}: Falha ao criar usuário`);
       }
-    });
-    
-    if (error) {
-      console.error('Erro ao criar usuário:', error);
-      // Tenta ler a mensagem de erro retornada pela função
-      const message = await error.context?.json().then((res: any) => res.error).catch(() => error.message);
-      toast.error('Erro ao cadastrar: ' + (message || 'Erro desconhecido'));
-    } else {
+
       toast.success('Cliente cadastrado com sucesso!');
       navigate('/admin/clientes');
+
+    } catch (error: any) {
+      console.error('Erro detalhado:', error);
+      toast.error(error.message || 'Erro desconhecido ao cadastrar');
+    } finally {
+      setLoading(false);
     }
-    
-    setLoading(false);
   };
 
   return (
@@ -70,6 +99,17 @@ export default function AdminRegisterClientPage() {
 
           <CardContent>
             <form onSubmit={handleRegister} className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="store-name">Nome da Loja</Label>
+                <Input
+                  id="store-name"
+                  placeholder="Ex: Loja do João"
+                  value={registerData.storeName}
+                  onChange={(e) => setRegisterData({ ...registerData, storeName: e.target.value })}
+                  required
+                />
+              </div>
+
               <div className="space-y-2">
                 <Label htmlFor="register-email">Email do Cliente</Label>
                 <Input

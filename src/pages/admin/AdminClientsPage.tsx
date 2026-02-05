@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { Plus, Store, ExternalLink, Search, Trash2, Pencil, DollarSign, Calendar } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
@@ -32,6 +32,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { AdminLayout } from '@/components/admin/AdminLayout';
+import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -49,12 +50,21 @@ interface StoreData {
 }
 
 export default function AdminClientsPage() {
+  const { user } = useAuth();
+  const navigate = useNavigate();
   const [stores, setStores] = useState<StoreData[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [editingStore, setEditingStore] = useState<StoreData | null>(null);
   const [formData, setFormData] = useState({ price: '', dueDate: '' });
+
+  useEffect(() => {
+    if (user && user.email !== 'mguimarcos39@gmail.com') {
+      toast.error('Acesso restrito ao administrador.');
+      navigate('/admin');
+    }
+  }, [user, navigate]);
 
   useEffect(() => {
     fetchStores();

@@ -239,7 +239,7 @@ const Index = () => {
 
         {/* Final CTA */}
         <section className="py-24 bg-blue-600 text-white text-center relative overflow-hidden">
-          <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20"></div>
+          <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-transparent opacity-20"></div>
           <div className="container">
             <h2 className="text-4xl md:text-5xl font-bold mb-6 relative z-10">Pronto para começar sua jornada?</h2>
             <p className="text-xl opacity-90 mb-10 max-w-2xl mx-auto relative z-10">Junte-se a milhares de empreendedores que já estão vendendo online com a Inove Dev SaaS.</p>

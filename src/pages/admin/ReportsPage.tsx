@@ -61,18 +61,12 @@ export default function ReportsPage() {
         end_date: endDate
       });
 
-      const response = await supabase.functions.invoke('export-data', {
-        body: null,
-        headers: {
-          Authorization: `Bearer ${session.access_token}`
-        }
-      });
-
       // For now, do a direct fetch since we need the raw CSV
       const url = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/export-data?${params}`;
       const res = await fetch(url, {
         headers: {
-          Authorization: `Bearer ${session.access_token}`
+          Authorization: `Bearer ${session.access_token}`,
+          apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY
         }
       });
 
