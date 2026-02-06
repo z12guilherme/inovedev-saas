@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Plus, Store, ExternalLink, Search, Trash2, Pencil, DollarSign, Calendar } from 'lucide-react';
+import { Plus, Store, ExternalLink, Search, Trash2, Pencil, DollarSign, Calendar, Lock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -57,7 +57,7 @@ export default function AdminClientsPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [editingStore, setEditingStore] = useState<StoreData | null>(null);
-  const [formData, setFormData] = useState({ name: '', slug: '', price: '', dueDate: '' });
+  const [formData, setFormData] = useState({ name: '', slug: '', price: '', dueDate: '', password: '' });
 
   useEffect(() => {
     if (user && user.email !== 'mguimarcos39@gmail.com') {
@@ -120,7 +120,8 @@ export default function AdminClientsPage() {
       name: store.name,
       slug: store.slug,
       price: store.subscription_price?.toString() || '',
-      dueDate: store.due_date?.toString() || ''
+      dueDate: store.due_date?.toString() || '',
+      password: ''
     });
   };
 
@@ -145,7 +146,37 @@ export default function AdminClientsPage() {
         toast.error('Erro ao atualizar loja: ' + error.message);
       }
     } else {
-      toast.success('Loja atualizada com sucesso');
+      // Se houver senha para atualizar
+      if (formData.password) {
+        if (formData.password.length < 6) {
+          toast.error('A senha deve ter pelo menos 6 caracteres');
+          return;
+        }
+
+        try {
+          const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/create-user`, {
+            method: 'PUT',
+            headers: {
+              'Content-Type': 'application/json',
+              'apikey': import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+              'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`
+            },
+            body: JSON.stringify({
+              userId: editingStore.user_id,
+              password: formData.password
+            })
+          });
+
+          if (!response.ok) throw new Error('Falha ao atualizar senha');
+          toast.success('Loja e senha atualizadas com sucesso!');
+        } catch (error) {
+          console.error(error);
+          toast.warning('Loja salva, mas erro ao atualizar senha.');
+        }
+      } else {
+        toast.success('Loja atualizada com sucesso');
+      }
+
       setEditingStore(null);
       fetchStores();
     }
@@ -317,6 +348,20 @@ export default function AdminClientsPage() {
                   value={formData.dueDate} 
                   onChange={(e) => setFormData({...formData, dueDate: e.target.value})}
                   placeholder="Dia (1-31)"
+                />
+              </div>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="password">Nova Senha (Opcional)</Label>
+              <div className="relative">
+                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input 
+                  id="password" 
+                  className="pl-9" 
+                  type="text" 
+                  value={formData.password} 
+                  onChange={(e) => setFormData({...formData, password: e.target.value})}
+                  placeholder="Digite para alterar a senha"
                 />
               </div>
             </div>

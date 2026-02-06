@@ -5,6 +5,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2.48.1"
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Access-Control-Allow-Methods': 'POST, PUT, OPTIONS',
 }
 
 serve(async (req) => {
@@ -52,6 +53,30 @@ serve(async (req) => {
     if (authError || !adminUser) {
       // Apenas loga o aviso, mas não bloqueia, pois estamos usando a Service Role Key para a operação
       console.warn("Auth validation skipped or failed. Proceeding with execution.");
+    }
+
+    // --- ATUALIZAÇÃO DE SENHA (PUT) ---
+    if (req.method === 'PUT') {
+      const { userId, password } = await req.json()
+      
+      if (!userId || !password) {
+        return new Response(
+          JSON.stringify({ error: 'User ID and password are required' }),
+          { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
+        )
+      }
+
+      const { data, error } = await supabaseAdmin.auth.admin.updateUserById(
+        userId,
+        { password: password }
+      )
+
+      if (error) throw error
+
+      return new Response(
+        JSON.stringify({ message: 'Password updated successfully', user: data.user }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 200 }
+      )
     }
 
     // Pega os dados do corpo da requisição

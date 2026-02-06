@@ -56,7 +56,12 @@ export default function AdminDashboardPage() {
   useRealtimeNotifications({ storeId: store?.id || '' });
 
   useEffect(() => {
-    if (!store) return;
+    if (storeLoading) return;
+
+    if (!store) {
+      setLoading(false);
+      return;
+    }
 
     const fetchStats = async () => {
       try {
@@ -103,7 +108,7 @@ export default function AdminDashboardPage() {
     };
 
     fetchStats();
-  }, [store]);
+  }, [store, storeLoading]);
 
   const handleShareLink = () => {
     const storeUrl = `${window.location.origin}/loja/${store?.slug}`;
