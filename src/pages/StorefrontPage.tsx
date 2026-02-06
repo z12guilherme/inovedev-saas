@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useParams, Link, useNavigate, useSearchParams } from 'react-router-dom';
-import { ArrowRight, Truck, CreditCard, MessageCircle, ShieldCheck, ShoppingCart, Minus, Plus, Trash2, CheckCircle, Clock, XCircle } from 'lucide-react';
+import { ArrowRight, Truck, CreditCard, MessageCircle, ShieldCheck, ShoppingCart, Minus, Plus, Trash2, CheckCircle, Clock, XCircle, Search, Menu, Heart, Facebook, Instagram, Twitter, Mail, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -61,6 +61,7 @@ export default function StorefrontPage() {
   const [products, setProducts] = useState<Product[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [cart, setCart] = useState<CartItem[]>(() => {
     const saved = localStorage.getItem(`cart_${slug}`);
     return saved ? JSON.parse(saved) : [];
@@ -269,53 +270,111 @@ export default function StorefrontPage() {
   const primaryStyle = settings?.primary_color ? {
     '--primary': settings.primary_color,
     '--ring': settings.primary_color,
+    '--primary-foreground': '#ffffff'
   } as React.CSSProperties : {};
 
   return (
     <div className="min-h-screen flex flex-col bg-gray-50/30" style={primaryStyle}>
       {/* Top Bar */}
       {settings?.whatsapp_number && (
-        <div className="bg-primary text-primary-foreground py-2 text-xs font-medium">
+        <div className="bg-primary text-primary-foreground py-2.5 text-xs font-medium">
           <div className="container flex justify-between items-center">
             <span className="flex items-center gap-2">
-              <MessageCircle className="h-3 w-3" /> 
+              <MessageCircle className="h-3.5 w-3.5" /> 
               Fale conosco: {settings.whatsapp_number}
             </span>
-            <span className="hidden sm:inline">Entregamos em toda a região</span>
+            <div className="hidden sm:flex items-center gap-4">
+               <span>Entregamos em toda a região</span>
+               <span className="w-px h-3 bg-primary-foreground/30"></span>
+               <span>Rastrear Pedido</span>
+            </div>
           </div>
         </div>
       )}
 
       {/* Header */}
-      <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur shadow-sm">
-        <div className="container flex h-16 items-center justify-between">
-          <Link to={`/loja/${slug}`} className="font-bold text-2xl tracking-tight" style={{ color: settings?.primary_color || 'inherit' }}>
-            {store.name}
-          </Link>
+      <header className="sticky top-0 z-50 w-full border-b bg-white shadow-sm">
+        <div className="container py-4">
+          <div className="flex items-center justify-between gap-4">
+            {/* Logo */}
+            <Link to={`/loja/${slug}`} className="font-bold text-2xl tracking-tight flex-shrink-0" style={{ color: settings?.primary_color || '#333' }}>
+              {store.name}
+            </Link>
 
-          <nav className="hidden md:flex items-center gap-8 text-sm font-medium text-muted-foreground">
-            <Link to={`/loja/${slug}`} className="hover:text-primary transition-colors">Início</Link>
-            <Link to={`/loja/${slug}`} onClick={() => document.getElementById('products-grid')?.scrollIntoView({ behavior: 'smooth' })} className="hover:text-primary transition-colors">Produtos</Link>
-            {settings?.whatsapp_number && <a href={`https://wa.me/${settings.whatsapp_number.replace(/\D/g, '')}`} target="_blank" rel="noreferrer" className="hover:text-primary transition-colors">Contato</a>}
-          </nav>
+            {/* Search Bar - Desktop */}
+            <div className="hidden md:flex flex-1 max-w-md mx-auto relative">
+              <Input 
+                placeholder="Buscar produtos..." 
+                className="w-full pl-4 pr-10 rounded-full border-gray-200 bg-gray-50 focus:bg-white transition-colors"
+              />
+              <Button size="icon" variant="ghost" className="absolute right-0 top-0 h-full rounded-r-full hover:bg-transparent text-muted-foreground">
+                <Search className="h-5 w-5" />
+              </Button>
+            </div>
 
-          <Link to={`/loja/${slug}/carrinho`}>
-            <Button variant="ghost" size="icon" className="relative hover:bg-primary/10 hover:text-primary">
-              <ShoppingCart className="h-6 w-6" />
-              {cartItemCount > 0 && (
-                <Badge className="absolute -top-1 -right-1 h-5 w-5 rounded-full p-0 flex items-center justify-center text-xs">
-                  {cartItemCount}
-                </Badge>
-              )}
-            </Button>
-          </Link>
+            {/* Actions */}
+            <div className="flex items-center gap-2 sm:gap-4">
+              <Button variant="ghost" size="icon" className="md:hidden" onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}>
+                {isMobileMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
+              </Button>
+
+              <Button variant="ghost" size="icon" className="hidden sm:flex text-gray-600 hover:text-primary hover:bg-primary/5">
+                <Heart className="h-6 w-6" />
+              </Button>
+              
+              <Link to={`/loja/${slug}/carrinho`}>
+                <Button variant="ghost" className="relative group flex items-center gap-2 px-2 sm:px-4 hover:bg-primary/5">
+                  <div className="relative">
+                    <ShoppingCart className="h-6 w-6 text-gray-600 group-hover:text-primary transition-colors" />
+                    {cartItemCount > 0 && (
+                      <span className="absolute -top-2 -right-2 h-5 w-5 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-[10px] font-bold border-2 border-white">
+                        {cartItemCount}
+                      </span>
+                    )}
+                  </div>
+                  <div className="hidden sm:flex flex-col items-start text-xs">
+                    <span className="text-muted-foreground">Carrinho</span>
+                    <span className="font-bold text-gray-900">{formatCurrency(cartTotal)}</span>
+                  </div>
+                </Button>
+              </Link>
+            </div>
+          </div>
         </div>
+        
+        {/* Mobile Menu Overlay */}
+        {isMobileMenuOpen && (
+          <div className="absolute top-full left-0 w-full bg-white border-b shadow-lg p-4 flex flex-col gap-4 md:hidden z-50 animate-in slide-in-from-top-5">
+            <div className="relative">
+               <Input placeholder="Buscar produtos..." className="pl-10 bg-gray-50" />
+               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            </div>
+            <nav className="flex flex-col gap-1">
+              <Link to={`/loja/${slug}`} onClick={() => setIsMobileMenuOpen(false)} className="py-3 px-2 font-medium hover:bg-gray-50 rounded-md transition-colors">
+                Início
+              </Link>
+              <Link to={`/loja/${slug}`} onClick={() => { setIsMobileMenuOpen(false); document.getElementById('products-grid')?.scrollIntoView({ behavior: 'smooth' }); }} className="py-3 px-2 font-medium hover:bg-gray-50 rounded-md transition-colors">
+                Produtos
+              </Link>
+              {categories.length > 0 && (
+                <div className="py-2">
+                  <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2 px-2">Categorias</p>
+                  {categories.map(cat => (
+                     <Link key={cat.id} to={`/loja/${slug}/categoria/${cat.slug}`} onClick={() => setIsMobileMenuOpen(false)} className="block py-2 px-2 text-sm text-gray-600 hover:text-primary hover:bg-gray-50 rounded-md transition-colors">
+                       {cat.name}
+                     </Link>
+                  ))}
+                </div>
+              )}
+            </nav>
+          </div>
+        )}
       </header>
 
       <main className="flex-1">
         {/* Hero */}
         {!isCategoryView && (
-          <section className="relative bg-gray-900 text-white py-24 md:py-32 overflow-hidden">
+          <section className="relative bg-gray-100 py-12 md:py-20 lg:py-28 overflow-hidden">
              {settings?.banner_image_url ? (
                <div className="absolute inset-0 z-0">
                  <img 
@@ -323,19 +382,26 @@ export default function StorefrontPage() {
                    alt="Banner" 
                    className="w-full h-full object-cover"
                  />
-                 <div className="absolute inset-0 bg-black/60" />
+                 <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-black/50 to-transparent" />
                </div>
              ) : (
-                <div className="absolute inset-0 bg-gradient-to-br from-blue-600 to-blue-800 z-0" />
+                <div className="absolute inset-0 bg-gradient-to-r from-gray-900 to-gray-800 z-0" />
              )}
-             <div className="container relative z-10 text-center">
-               <div className="max-w-3xl mx-auto">
-                 <h1 className="text-4xl md:text-6xl font-extrabold mb-6 tracking-tight leading-tight text-white drop-shadow-md">{settings?.banner_title || `Bem-vindo à ${store.name}`}</h1>
-                 <p className="text-xl text-gray-200 mb-10 leading-relaxed drop-shadow-sm">{settings?.banner_subtitle || 'Confira nossos produtos em destaque e aproveite as ofertas exclusivas.'}</p>
+             <div className="container relative z-10">
+               <div className="max-w-2xl text-left animate-fade-in-up">
+                 <span className="inline-block py-1 px-3 rounded-full bg-white/20 text-white backdrop-blur-sm text-sm font-medium mb-6 border border-white/10">
+                    Nova Coleção
+                 </span>
+                 <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold mb-6 tracking-tight leading-[1.1] text-white">
+                    {settings?.banner_title || `Bem-vindo à ${store.name}`}
+                 </h1>
+                 <p className="text-lg md:text-xl text-gray-200 mb-8 leading-relaxed max-w-lg">
+                    {settings?.banner_subtitle || 'Confira nossos produtos em destaque e aproveite as ofertas exclusivas.'}
+                 </p>
                  <Button 
                    size="lg" 
-                   className="rounded-full px-10 text-lg h-14 shadow-lg hover:shadow-xl transition-all hover:scale-105 border-2 border-transparent" 
-                   style={{ backgroundColor: settings?.primary_color || 'white', color: settings?.primary_color ? 'white' : 'black' }}
+                   className="rounded-full px-8 py-6 text-lg shadow-xl hover:shadow-2xl transition-all hover:-translate-y-1" 
+                   style={{ backgroundColor: settings?.primary_color || 'white', color: '#fff' }}
                    onClick={() => document.getElementById('products-grid')?.scrollIntoView({ behavior: 'smooth' })}
                  >
                    Ver Coleção <ArrowRight className="ml-2 h-5 w-5" />
@@ -347,33 +413,33 @@ export default function StorefrontPage() {
 
         {/* Features Bar */}
         {!isCategoryView && (
-            <section className="py-10 bg-white border-b">
+            <section className="py-12 bg-white border-b">
                 <div className="container grid grid-cols-1 md:grid-cols-3 gap-8">
-                    <div className="flex items-center gap-4 p-4 rounded-xl hover:bg-gray-50 transition-colors border border-transparent hover:border-gray-100">
-                        <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center text-primary shrink-0">
+                    <div className="flex items-start gap-4 p-4">
+                        <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center text-primary shrink-0 mt-1">
                             <Truck className="h-6 w-6" />
                         </div>
                         <div>
-                            <h3 className="font-bold text-gray-900">Entrega Rápida</h3>
-                            <p className="text-sm text-muted-foreground">Para toda a região</p>
+                            <h3 className="font-bold text-gray-900 text-lg">Entrega Rápida</h3>
+                            <p className="text-sm text-muted-foreground mt-1 leading-relaxed">Entregamos em toda a região com agilidade e segurança para você.</p>
                         </div>
                     </div>
-                    <div className="flex items-center gap-4 p-4 rounded-xl hover:bg-gray-50 transition-colors border border-transparent hover:border-gray-100">
-                        <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center text-primary shrink-0">
+                    <div className="flex items-start gap-4 p-4">
+                        <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center text-primary shrink-0 mt-1">
                             <ShieldCheck className="h-6 w-6" />
                         </div>
                         <div>
-                            <h3 className="font-bold text-gray-900">Compra Segura</h3>
-                            <p className="text-sm text-muted-foreground">Proteção total dos dados</p>
+                            <h3 className="font-bold text-gray-900 text-lg">Compra Segura</h3>
+                            <p className="text-sm text-muted-foreground mt-1 leading-relaxed">Seus dados protegidos e garantia de satisfação em todas as compras.</p>
                         </div>
                     </div>
-                    <div className="flex items-center gap-4 p-4 rounded-xl hover:bg-gray-50 transition-colors border border-transparent hover:border-gray-100">
-                        <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center text-primary shrink-0">
+                    <div className="flex items-start gap-4 p-4">
+                        <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center text-primary shrink-0 mt-1">
                             <CreditCard className="h-6 w-6" />
                         </div>
                         <div>
-                            <h3 className="font-bold text-gray-900">Pagamento Facilitado</h3>
-                            <p className="text-sm text-muted-foreground">Pix, Cartão e Dinheiro</p>
+                            <h3 className="font-bold text-gray-900 text-lg">Pagamento Facilitado</h3>
+                            <p className="text-sm text-muted-foreground mt-1 leading-relaxed">Aceitamos Pix, Cartão e Dinheiro na entrega. Escolha o melhor para você.</p>
                         </div>
                     </div>
                 </div>
@@ -382,21 +448,22 @@ export default function StorefrontPage() {
 
         {/* Categories */}
         {categories.length > 0 && !isCategoryView && (
-          <section className="py-16 bg-gray-50/50">
+          <section className="py-16 bg-gray-50">
             <div className="container">
-              <div className="flex items-center justify-between mb-8">
-                 <h2 className="text-2xl font-bold text-gray-900">Categorias</h2>
+              <div className="text-center mb-12">
+                 <h2 className="text-3xl font-bold text-gray-900 mb-3">Categorias em Destaque</h2>
+                 <p className="text-muted-foreground">Navegue pelas nossas principais seções</p>
               </div>
-              <div className="flex gap-4 overflow-x-auto pb-6 scrollbar-hide snap-x">
+              <div className="flex flex-wrap justify-center gap-6">
                 {categories.map(cat => (
-                  <Link key={cat.id} to={`/loja/${slug}/categoria/${cat.slug}`} className="flex-shrink-0 snap-start group">
-                    <div className="flex flex-col items-center gap-3 min-w-[120px] p-6 rounded-2xl bg-white border shadow-sm hover:shadow-md transition-all hover:-translate-y-1">
-                      <div className="w-16 h-16 rounded-full bg-gray-100 group-hover:bg-primary/10 flex items-center justify-center transition-colors">
-                        <span className="text-2xl font-bold text-gray-400 group-hover:text-primary transition-colors">
+                  <Link key={cat.id} to={`/loja/${slug}/categoria/${cat.slug}`} className="group min-w-[140px]">
+                    <div className="flex flex-col items-center gap-4 p-6 rounded-xl bg-white border border-gray-100 shadow-sm hover:shadow-lg transition-all hover:-translate-y-1">
+                      <div className="w-20 h-20 rounded-full bg-gray-50 group-hover:bg-primary/10 flex items-center justify-center transition-colors duration-300">
+                        <span className="text-3xl font-bold text-gray-300 group-hover:text-primary transition-colors">
                             {cat.name.charAt(0).toUpperCase()}
                         </span>
                       </div>
-                      <span className="text-sm font-medium text-gray-700 group-hover:text-primary transition-colors">{cat.name}</span>
+                      <span className="font-semibold text-gray-800 group-hover:text-primary transition-colors">{cat.name}</span>
                     </div>
                   </Link>
                 ))}
@@ -406,7 +473,7 @@ export default function StorefrontPage() {
         )}
 
         {/* Products */}
-        <section className="py-16 bg-white" id="products-grid">
+        <section className="py-20 bg-white" id="products-grid">
           <div className="container">
             {isCategoryView && (
               <div className="mb-6">
@@ -441,8 +508,11 @@ export default function StorefrontPage() {
               <div className="space-y-16">
                 {featuredProducts.length > 0 && (
                   <div>
-                    <h2 className="text-2xl font-bold mb-8 text-gray-900">Destaques</h2>
-                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
+                    <div className="flex items-center justify-between mb-8 border-b pb-4">
+                      <h2 className="text-2xl font-bold text-gray-900 relative after:content-[''] after:absolute after:bottom-[-17px] after:left-0 after:w-20 after:h-1 after:bg-primary">Produtos em Destaque</h2>
+                    </div>
+                    
+                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
                       {featuredProducts.map(product => (
                         <ProductCard
                           key={product.id}
@@ -462,8 +532,8 @@ export default function StorefrontPage() {
 
                   return (
                     <div key={category.id}>
-                      <div className="flex items-center justify-between mb-6">
-                        <h2 className="text-2xl font-bold text-gray-900">{category.name}</h2>
+                      <div className="flex items-center justify-between mb-8 border-b pb-4">
+                        <h2 className="text-2xl font-bold text-gray-900 relative after:content-[''] after:absolute after:bottom-[-17px] after:left-0 after:w-20 after:h-1 after:bg-primary">{category.name}</h2>
                         <Link 
                           to={`/loja/${slug}/categoria/${category.slug}`}
                           className="text-sm font-medium hover:text-primary transition-colors"
@@ -471,7 +541,7 @@ export default function StorefrontPage() {
                           Ver todos
                         </Link>
                       </div>
-                      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
+                      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
                         {categoryProducts.slice(0, 8).map(product => (
                           <ProductCard
                             key={product.id}
@@ -489,7 +559,7 @@ export default function StorefrontPage() {
                 {categories.length === 0 && products.length > 0 && featuredProducts.length === 0 && (
                    <div>
                       <h2 className="text-2xl font-bold mb-8 text-gray-900">Todos os Produtos</h2>
-                      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
+                      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
                         {products.map(product => (
                           <ProductCard
                             key={product.id}
@@ -509,18 +579,18 @@ export default function StorefrontPage() {
 
         {/* CTA */}
         {settings?.whatsapp_number && (
-          <section className="py-16 bg-gray-50">
+          <section className="py-20 bg-gray-900 text-white">
             <div className="container">
-              <div className="bg-primary rounded-2xl p-8 text-center text-primary-foreground">
-                <h2 className="text-xl font-bold mb-2">Dúvidas?</h2>
-                <p className="text-primary-foreground/80 mb-4">Fale conosco pelo WhatsApp</p>
-                <Button variant="secondary" asChild className="text-primary">
+              <div className="text-center max-w-2xl mx-auto">
+                <h2 className="text-3xl font-bold mb-4">Ainda tem dúvidas?</h2>
+                <p className="text-gray-300 mb-8 text-lg">Nossa equipe está pronta para te atender. Entre em contato pelo WhatsApp e faça seu pedido.</p>
+                <Button size="lg" asChild className="rounded-full px-8 h-12 text-base font-bold bg-green-500 hover:bg-green-600 text-white border-none">
                   <a
                     href={`https://wa.me/${settings.whatsapp_number.replace(/\D/g, '')}`}
                     target="_blank"
                     rel="noopener noreferrer"
                   >
-                    <MessageCircle className="mr-2 h-4 w-4" />
+                    <MessageCircle className="mr-2 h-5 w-5" />
                     WhatsApp
                   </a>
                 </Button>
@@ -528,33 +598,65 @@ export default function StorefrontPage() {
             </div>
           </section>
         )}
+
+        {/* Newsletter Section */}
+        {!isCategoryView && (
+          <section className="py-16 bg-primary/5 border-t border-primary/10">
+            <div className="container text-center max-w-xl">
+              <Mail className="h-10 w-10 mx-auto text-primary mb-4" />
+              <h2 className="text-2xl font-bold mb-2 text-gray-900">Fique por dentro das novidades</h2>
+              <p className="text-muted-foreground mb-8">Cadastre-se para receber ofertas exclusivas e lançamentos da {store.name}.</p>
+              <div className="flex gap-2 max-w-sm mx-auto">
+                <Input placeholder="Seu melhor email" className="bg-white border-gray-200" />
+                <Button style={{ backgroundColor: settings?.primary_color || undefined }}>Inscrever</Button>
+              </div>
+            </div>
+          </section>
+        )}
       </main>
 
       {/* Footer */}
-      <footer className="bg-slate-900 text-slate-200 py-12 border-t-4 border-primary">
+      <footer className="bg-white text-gray-600 py-16 border-t">
         <div className="container">
-            <div className="grid md:grid-cols-3 gap-8 mb-8">
-                <div>
-                    <h3 className="text-white text-lg font-bold mb-4">{store.name}</h3>
-                    <p className="text-sm opacity-80 leading-relaxed">Sua loja favorita com os melhores produtos e atendimento.</p>
+            <div className="grid md:grid-cols-4 gap-8 mb-12">
+                <div className="col-span-1 md:col-span-1">
+                    <h3 className="text-gray-900 text-lg font-bold mb-6">{store.name}</h3>
+                    <p className="text-sm leading-relaxed mb-6">Oferecemos os melhores produtos com qualidade e preço justo. Sua satisfação é nossa prioridade.</p>
+                    <div className="flex gap-4">
+                      <a href="#" className="text-gray-400 hover:text-primary transition-colors"><Facebook className="h-5 w-5" /></a>
+                      <a href="#" className="text-gray-400 hover:text-primary transition-colors"><Instagram className="h-5 w-5" /></a>
+                      <a href="#" className="text-gray-400 hover:text-primary transition-colors"><Twitter className="h-5 w-5" /></a>
+                    </div>
                 </div>
                 <div>
-                    <h4 className="text-white font-semibold mb-4">Links Rápidos</h4>
-                    <ul className="space-y-2 text-sm">
-                        <li><Link to={`/loja/${slug}`} className="hover:text-white transition-colors">Início</Link></li>
-                        <li><Link to={`/loja/${slug}/carrinho`} className="hover:text-white transition-colors">Carrinho</Link></li>
+                    <h4 className="text-gray-900 font-bold mb-6">Links Rápidos</h4>
+                    <ul className="space-y-3 text-sm">
+                        <li><Link to={`/loja/${slug}`} className="hover:text-primary transition-colors">Início</Link></li>
+                        <li><Link to={`/loja/${slug}`} onClick={() => document.getElementById('products-grid')?.scrollIntoView()} className="hover:text-primary transition-colors">Produtos</Link></li>
+                        <li><Link to={`/loja/${slug}/carrinho`} className="hover:text-primary transition-colors">Carrinho</Link></li>
                     </ul>
                 </div>
                 <div>
-                    <h4 className="text-white font-semibold mb-4">Contato</h4>
+                    <h4 className="text-gray-900 font-bold mb-6">Categorias</h4>
+                    <ul className="space-y-3 text-sm">
+                        {categories.slice(0, 4).map(cat => (
+                          <li key={cat.id}><Link to={`/loja/${slug}/categoria/${cat.slug}`} className="hover:text-primary transition-colors">{cat.name}</Link></li>
+                        ))}
+                    </ul>
+                </div>
+                <div>
+                    <h4 className="text-gray-900 font-bold mb-6">Contato</h4>
                     {settings?.whatsapp_number && (
-                        <p className="text-sm mb-2 flex items-center gap-2"><MessageCircle className="h-4 w-4" /> {settings.whatsapp_number}</p>
+                        <p className="text-sm mb-3 flex items-center gap-2"><MessageCircle className="h-4 w-4 text-primary" /> {settings.whatsapp_number}</p>
                     )}
+                    <p className="text-sm text-gray-500 mt-4">Atendimento: Seg à Sex, 9h às 18h</p>
                 </div>
             </div>
-            <div className="border-t border-slate-800 pt-8 text-center text-sm opacity-60">
-                <p>© {new Date().getFullYear()} {store.name}. Todos os direitos reservados.</p>
-                <p className="mt-1 text-xs">Powered by Inove Commerce</p>
+            <div className="border-t border-gray-100 pt-8 text-center text-sm text-gray-500">
+                <p className="mb-2">© {new Date().getFullYear()} {store.name}. Todos os direitos reservados.</p>
+                <p className="text-xs flex items-center justify-center gap-1">
+                  Powered by <a href="https://saas.inovedev.com.br" target="_blank" rel="noreferrer" className="font-bold hover:text-primary">Inove Commerce</a>
+                </p>
             </div>
         </div>
       </footer>
@@ -572,44 +674,56 @@ function ProductCard({ product, storeSlug, onAddToCart, primaryColor }: {
   const hasDiscount = product.original_price && Number(product.original_price) > Number(product.price);
 
   return (
-    <Card className="group overflow-hidden hover:shadow-xl transition-all border-transparent hover:border-primary/20 bg-white h-full flex flex-col">
+    <div className="group bg-white rounded-lg border border-gray-100 hover:shadow-xl transition-all duration-300 h-full flex flex-col relative">
       <Link to={`/loja/${storeSlug}/produto/${product.id}`}>
-        <div className="aspect-square bg-muted relative overflow-hidden">
+        <div className="aspect-[4/5] bg-gray-50 relative overflow-hidden rounded-t-lg">
           {product.image_url ? (
             <img src={product.image_url} alt={product.name} className="object-cover w-full h-full group-hover:scale-105 transition-transform" />
           ) : (
             <div className="w-full h-full flex items-center justify-center text-4xl">📦</div>
           )}
           {hasDiscount && (
-            <Badge className="absolute top-2 left-2 bg-destructive">
+            <span className="absolute top-3 left-3 bg-red-500 text-white text-xs font-bold px-2 py-1 rounded">
               -{Math.round((1 - Number(product.price) / Number(product.original_price!)) * 100)}%
-            </Badge>
+            </span>
           )}
+          
+          {/* Quick Actions Overlay */}
+          <div className="absolute bottom-0 left-0 right-0 p-4 translate-y-full group-hover:translate-y-0 transition-transform duration-300 flex gap-2">
+             <Button 
+                size="icon"
+                variant="secondary"
+                className="shrink-0 bg-white hover:bg-gray-100 text-gray-600 shadow-lg"
+                onClick={(e) => { e.preventDefault(); }}
+              >
+                <Heart className="h-4 w-4" />
+              </Button>
+             <Button 
+                className="flex-1 shadow-lg font-medium"
+                style={{ backgroundColor: primaryColor || undefined }}
+                onClick={(e) => { e.preventDefault(); onAddToCart(); }}
+              >
+                <ShoppingCart className="h-4 w-4 mr-2" />
+                Adicionar
+              </Button>
+          </div>
         </div>
       </Link>
-      <CardContent className="p-4 flex flex-col flex-1">
+      <div className="p-4 flex flex-col flex-1">
+        <div className="text-xs text-muted-foreground mb-1">Categoria</div>
         <Link to={`/loja/${storeSlug}/produto/${product.id}`}>
-          <h3 className="font-medium line-clamp-2 group-hover:text-primary transition-colors min-h-[2.5rem] text-gray-800">{product.name}</h3>
+          <h3 className="font-bold text-gray-900 line-clamp-2 group-hover:text-primary transition-colors mb-2 min-h-[2.5rem]">{product.name}</h3>
         </Link>
-        <div className="mt-auto pt-2 flex items-baseline gap-2">
-          <span className="text-lg font-bold" style={{ color: primaryColor || 'inherit' }}>{formatCurrency(Number(product.price))}</span>
+        <div className="mt-auto flex items-baseline gap-2">
+          <span className="text-lg font-bold text-primary" style={{ color: primaryColor || 'inherit' }}>{formatCurrency(Number(product.price))}</span>
           {hasDiscount && (
-            <span className="text-sm text-muted-foreground line-through">
+            <span className="text-sm text-gray-400 line-through">
               {formatCurrency(Number(product.original_price!))}
             </span>
           )}
         </div>
-        <Button 
-          className="w-full mt-3 opacity-0 group-hover:opacity-100 transition-opacity" 
-          size="sm" 
-          style={{ backgroundColor: primaryColor || undefined }}
-          onClick={(e) => { e.preventDefault(); onAddToCart(); }}
-        >
-          <ShoppingCart className="h-4 w-4 mr-2" />
-          Adicionar
-        </Button>
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 }
 
