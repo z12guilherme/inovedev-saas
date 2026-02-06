@@ -3,6 +3,7 @@ import { Upload, X, Image as ImageIcon, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import imageCompression from 'browser-image-compression';
 
 interface ImageUploadProps {
   storeId: string;
@@ -38,12 +39,27 @@ export function ImageUpload({
     setUploading(true);
 
     try {
-      const fileExt = file.name.split('.').pop();
+      let fileToUpload = file;
+      let fileExt = file.name.split('.').pop();
+
+      try {
+        const options = {
+          maxSizeMB: 0.3,          // Comprime para no máximo 300KB
+          maxWidthOrHeight: 1080,  // Redimensiona para Full HD (suficiente para web)
+          useWebWorker: true,      // Usa processamento paralelo para não travar a tela
+          fileType: 'image/webp'   // Converte para WebP (formato mais leve do Google)
+        };
+        fileToUpload = await imageCompression(file, options);
+        fileExt = 'webp';
+      } catch (error) {
+        console.error('Erro na compressão, enviando original:', error);
+      }
+
       const fileName = `${storeId}/${folder}/${Date.now()}.${fileExt}`;
 
       const { error: uploadError } = await supabase.storage
         .from('store-assets')
-        .upload(fileName, file);
+        .upload(fileName, fileToUpload);
 
       if (uploadError) throw uploadError;
 
