@@ -277,7 +277,7 @@ export default function AdminProductsPage() {
                 {/* Image Upload */}
                 <div className="space-y-2">
                   <Label>Imagem do produto</Label>
-                  <div className="h-40">
+                  <div className="relative h-56 w-full overflow-hidden rounded-lg border">
                     <ImageUpload
                       storeId={store?.id || ''}
                       value={formData.image_url}
