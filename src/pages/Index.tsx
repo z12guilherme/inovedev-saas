@@ -26,20 +26,7 @@ const Index = () => {
 
   if (!config) {
     return (
-      <div className="min-h-screen bg-background flex flex-col" style={{ '--primary': '#3b82f6', '--ring': '#3b82f6' } as React.CSSProperties}>
-        <style>{`
-          @keyframes fadeInUp {
-            from { opacity: 0; transform: translateY(30px); }
-            to { opacity: 1; transform: translateY(0); }
-          }
-          .animate-fade-in-up {
-            animation: fadeInUp 0.8s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
-            opacity: 0;
-          }
-          .delay-100 { animation-delay: 0.1s; }
-          .delay-200 { animation-delay: 0.2s; }
-          .delay-300 { animation-delay: 0.3s; }
-        `}</style>
+      <div className="min-h-screen bg-background flex flex-col saas-landing" style={{ '--primary': '217 91% 60%', '--ring': '217 91% 60%' } as React.CSSProperties}>
         {/* Navbar SaaS */}
         <header className="border-b border-blue-100 bg-white/80 backdrop-blur-md sticky top-0 z-50">
           <div className="container flex h-16 items-center justify-between">

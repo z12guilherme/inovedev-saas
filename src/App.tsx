@@ -34,6 +34,7 @@ import ReportsPage from "./pages/admin/ReportsPage";
 import StoreBuilderPage from "./pages/admin/StoreBuilderPage";
 import AdminRegisterClientPage from "./pages/admin/AdminRegisterClientPage";
 import AdminClientsPage from "./pages/admin/AdminClientsPage";
+import { AdminLayout } from "./components/layout/AdminLayout";
 
 const queryClient = new QueryClient();
 
@@ -67,66 +68,22 @@ const App = () => (
                   
                   {/* Admin routes */}
                   <Route path="/admin/login" element={<AdminAuthPage />} />
-                  <Route path="/admin/criar-loja" element={
-                    <ProtectedRoute>
-                      <CreateStorePage />
-                    </ProtectedRoute>
-                  } />
-                  <Route path="/admin/novo-cliente" element={
-                    <ProtectedRoute>
-                      <AdminRegisterClientPage />
-                    </ProtectedRoute>
-                  } />
-                  <Route path="/admin/clientes" element={
-                    <ProtectedRoute>
-                      <AdminClientsPage />
-                    </ProtectedRoute>
-                  } />
-                  <Route path="/admin/onboarding" element={
-                    <ProtectedRoute>
-                      <OnboardingPage />
-                    </ProtectedRoute>
-                  } />
-                  <Route path="/admin" element={
-                    <ProtectedRoute>
-                      <AdminDashboardPage />
-                    </ProtectedRoute>
-                  } />
-                  <Route path="/admin/produtos" element={
-                    <ProtectedRoute>
-                      <AdminProductsPage />
-                    </ProtectedRoute>
-                  } />
-                  <Route path="/admin/categorias" element={
-                    <ProtectedRoute>
-                      <AdminCategoriesPage />
-                    </ProtectedRoute>
-                  } />
-                  <Route path="/admin/pedidos" element={
-                    <ProtectedRoute>
-                      <AdminOrdersPage />
-                    </ProtectedRoute>
-                  } />
-                  <Route path="/admin/pagamentos" element={
-                    <ProtectedRoute>
-                      <PaymentsPage />
-                    </ProtectedRoute>
-                  } />
-                  <Route path="/admin/configuracoes" element={
-                    <ProtectedRoute>
-                      <AdminSettingsPage />
-                    </ProtectedRoute>
-                  } />
-                  <Route path="/admin/construtor" element={
-                    <ProtectedRoute>
-                      <StoreBuilderPage />
-                    </ProtectedRoute>
-                  } />
-                  <Route path="/admin/relatorios" element={
-                    <ProtectedRoute>
-                      <ReportsPage />
-                    </ProtectedRoute>
-                  } />
+                  <Route path="/admin/criar-loja" element={<ProtectedRoute><CreateStorePage /></ProtectedRoute>} />
+                  <Route path="/admin/onboarding" element={<ProtectedRoute><OnboardingPage /></ProtectedRoute>} />
+                  
+                  {/* Routes inside the admin panel */}
+                  <Route path="/admin" element={<AdminLayout />}>
+                    <Route index element={<AdminDashboardPage />} />
+                    <Route path="produtos" element={<AdminProductsPage />} />
+                    <Route path="categorias" element={<AdminCategoriesPage />} />
+                    <Route path="pedidos" element={<AdminOrdersPage />} />
+                    <Route path="pagamentos" element={<PaymentsPage />} />
+                    <Route path="configuracoes" element={<AdminSettingsPage />} />
+                    <Route path="construtor" element={<StoreBuilderPage />} />
+                    <Route path="relatorios" element={<ReportsPage />} />
+                    <Route path="novo-cliente" element={<AdminRegisterClientPage />} />
+                    <Route path="clientes" element={<AdminClientsPage />} />
+                  </Route>
                   
                   {/* Catch-all */}
                   <Route path="*" element={<NotFound />} />
