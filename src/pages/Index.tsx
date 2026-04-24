@@ -54,7 +54,7 @@ const Index = () => {
           {/* Glowing orbs */}
           <div className="absolute top-[-10%] left-[-10%] w-[450px] h-[450px] bg-[#00C7B7] rounded-full blur-[120px] opacity-20 animate-pulse"></div>
           <div className="absolute bottom-[-15%] right-[-5%] w-[350px] h-[350px] bg-[#007BFF] rounded-full blur-[120px] opacity-20 animate-pulse delay-700"></div>
-          
+
           <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.02)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.02)_1px,transparent_1px)] bg-[size:60px_60px]"></div>
 
           <div className="container text-center max-w-4xl relative z-10">
@@ -63,9 +63,9 @@ const Index = () => {
               Plataforma Multi-tenant
             </div>
             <h1 className="text-5xl md:text-7xl font-extrabold tracking-tight mb-8 text-white drop-shadow-sm font-['Montserrat']">
-              Acelerando a sua <br />
+              Seu negócio On-Line <br />
               <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#00C7B7] to-[#48ebd9]">
-                Evolução Digital
+                em Minutos
               </span>
             </h1>
             <p className="text-xl text-[#aeb9c6] mb-12 max-w-2xl mx-auto leading-relaxed font-light">
@@ -87,8 +87,8 @@ const Index = () => {
         {/* Features Grid */}
         <section id="features" className="py-24 bg-[#f8f9fa]">
           <div className="container">
-             <div className="text-center mb-16">
-              <span className="bg-[#00C7B7] text-[#050a12] px-3 py-1 rounded-full text-sm font-bold tracking-wide uppercase mb-4 inline-block shadow-md"><LayoutDashboard className="inline w-4 h-4 mr-1"/> Recursos Premium</span>
+            <div className="text-center mb-16">
+              <span className="bg-[#00C7B7] text-[#050a12] px-3 py-1 rounded-full text-sm font-bold tracking-wide uppercase mb-4 inline-block shadow-md"><LayoutDashboard className="inline w-4 h-4 mr-1" /> Recursos Premium</span>
               <h2 className="text-4xl font-bold mb-4 text-[#2c4964] font-['Montserrat'] uppercase relative pb-4 after:content-[''] after:absolute after:w-12 after:h-[3px] after:bg-[#00C7B7] after:bottom-0 after:left-1/2 after:-translate-x-1/2">Tudo que você precisa</h2>
             </div>
             <div className="grid md:grid-cols-3 gap-8">
@@ -121,7 +121,7 @@ const Index = () => {
         <section id="how-it-works" className="py-24 bg-white">
           <div className="container">
             <div className="text-center mb-16">
-              <span className="bg-[#00C7B7] text-[#050a12] px-3 py-1 rounded-full text-sm font-bold tracking-wide uppercase mb-4 inline-block shadow-md"><Settings className="inline w-4 h-4 mr-1"/> Processo Simples</span>
+              <span className="bg-[#00C7B7] text-[#050a12] px-3 py-1 rounded-full text-sm font-bold tracking-wide uppercase mb-4 inline-block shadow-md"><Settings className="inline w-4 h-4 mr-1" /> Processo Simples</span>
               <h2 className="text-4xl font-bold mb-4 text-[#2c4964] font-['Montserrat'] uppercase relative pb-4 after:content-[''] after:absolute after:w-12 after:h-[3px] after:bg-[#00C7B7] after:bottom-0 after:left-1/2 after:-translate-x-1/2">Como funciona</h2>
               <p className="text-gray-500 text-lg max-w-2xl mx-auto mt-6">
                 Crie sua loja exclusiva em poucos minutos e comece a vender sem complicações.
@@ -157,7 +157,7 @@ const Index = () => {
         <section id="pricing" className="py-24 bg-[#f8f9fa]">
           <div className="container">
             <div className="text-center mb-16">
-              <span className="bg-[#00C7B7] text-[#050a12] px-3 py-1 rounded-full text-sm font-bold tracking-wide uppercase mb-4 inline-block shadow-md"><Store className="inline w-4 h-4 mr-1"/> Assinaturas</span>
+              <span className="bg-[#00C7B7] text-[#050a12] px-3 py-1 rounded-full text-sm font-bold tracking-wide uppercase mb-4 inline-block shadow-md"><Store className="inline w-4 h-4 mr-1" /> Assinaturas</span>
               <h2 className="text-4xl font-bold mb-4 text-[#2c4964] font-['Montserrat'] uppercase relative pb-4 after:content-[''] after:absolute after:w-12 after:h-[3px] after:bg-[#00C7B7] after:bottom-0 after:left-1/2 after:-translate-x-1/2">Planos Transparentes</h2>
             </div>
             <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
@@ -242,7 +242,7 @@ const Index = () => {
           <div className="absolute bottom-0 left-0 opacity-25 w-[300px] h-[300px] bg-[radial-gradient(circle,#007BFF_0%,transparent_70%)] blur-[50px] -translate-x-[30%] translate-y-[30%]"></div>
 
           <div className="container relative z-10">
-             <span className="badge mb-6 px-4 py-2 rounded-full font-bold border border-white/20 text-white bg-white/5 backdrop-blur-sm inline-block"><Rocket className="inline w-4 h-4 mr-1"/> PLATAFORMA SAAS</span>
+            <span className="badge mb-6 px-4 py-2 rounded-full font-bold border border-white/20 text-white bg-white/5 backdrop-blur-sm inline-block"><Rocket className="inline w-4 h-4 mr-1" /> PLATAFORMA SAAS</span>
             <h2 className="text-4xl md:text-5xl font-bold mb-6 font-['Montserrat']">Sua loja virtual <span className="text-[#00C7B7]">exclusiva</span>.</h2>
             <p className="text-xl text-white/70 mb-10 max-w-2xl mx-auto font-light">Agende uma demonstração da Inove SaaS agora e veja como ter acesso a um ambiente seguro, escalável e pronto para impulsionar suas vendas.</p>
             <Button size="lg" className="h-14 px-10 text-lg rounded-full bg-[#00C7B7] hover:bg-[#00a699] text-[#050a12] font-bold shadow-[0_8px_25px_rgba(0,199,183,0.3)] transition-all hover:-translate-y-1" asChild>
@@ -250,7 +250,7 @@ const Index = () => {
             </Button>
           </div>
         </section>
-        
+
         <footer className="py-8 bg-[#0D1B2A] border-t border-white/10 text-center text-white/60 text-sm">
           <div className="container">
             <div className="font-['Montserrat'] mb-2">
@@ -290,14 +290,14 @@ const Index = () => {
   return (
     <div className="min-h-screen flex flex-col">
       <Header />
-      
+
       <main className="flex-1">
         {/* Hero Section */}
         <section className="relative overflow-hidden">
           <div className="absolute inset-0">
-            <img 
-              src={heroBanner} 
-              alt="Produtos variados" 
+            <img
+              src={heroBanner}
+              alt="Produtos variados"
               className="w-full h-full object-cover opacity-20"
             />
             <div className="absolute inset-0 bg-gradient-to-r from-background via-background/95 to-background/80" />
@@ -309,7 +309,7 @@ const Index = () => {
                 <span className="text-primary">{config.name}</span>
               </h1>
               <p className="mt-6 text-lg text-muted-foreground">
-                Encontre os melhores produtos com os melhores preços. 
+                Encontre os melhores produtos com os melhores preços.
                 Compre online e receba no conforto da sua casa.
               </p>
               <div className="mt-8 flex flex-col sm:flex-row gap-4">
@@ -399,7 +399,7 @@ const Index = () => {
                 Precisa de ajuda com seu pedido?
               </h2>
               <p className="text-primary-foreground/80 mb-6 max-w-xl mx-auto">
-                Nossa equipe está pronta para atender você pelo WhatsApp. 
+                Nossa equipe está pronta para atender você pelo WhatsApp.
                 Tire suas dúvidas e faça seu pedido!
               </p>
               <Button
