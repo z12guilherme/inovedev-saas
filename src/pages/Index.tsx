@@ -177,7 +177,9 @@ const Index = () => {
                   </ul>
                 </CardContent>
                 <CardFooter className="pb-8">
-                  <Button className="w-full bg-[#00C7B7] hover:bg-[#00a699] text-[#050a12] font-bold rounded-full h-12 shadow-[0_8px_20px_rgba(0,199,183,0.25)] hover:-translate-y-1 transition-all">Assinar Agora</Button>
+                  <Button className="w-full bg-[#00C7B7] hover:bg-[#00a699] text-[#050a12] font-bold rounded-full h-12 shadow-[0_8px_20px_rgba(0,199,183,0.25)] hover:-translate-y-1 transition-all" asChild>
+                    <a href="https://wa.me/5581989035561?text=Olá, tenho interesse no plano SaaS Pro e gostaria de agendar uma demonstração" target="_blank" rel="noopener noreferrer">Agendar Demonstração</a>
+                  </Button>
                 </CardFooter>
               </Card>
               <Card className="border border-gray-200 shadow-lg hover:border-[#00C7B7]/50 transition-colors rounded-2xl bg-white mt-8 md:mt-0">
@@ -195,7 +197,9 @@ const Index = () => {
                   </ul>
                 </CardContent>
                 <CardFooter className="pb-8">
-                  <Button className="w-full rounded-full h-12 font-bold border-2 border-[#0d1b2a] text-[#0d1b2a] hover:bg-[#0d1b2a] hover:text-white transition-all" variant="outline">Falar com Especialista</Button>
+                  <Button className="w-full rounded-full h-12 font-bold border-2 border-[#0d1b2a] text-[#0d1b2a] hover:bg-[#0d1b2a] hover:text-white transition-all" variant="outline" asChild>
+                    <a href="https://wa.me/5581989035561?text=Olá, gostaria de falar com um especialista sobre o plano Enterprise" target="_blank" rel="noopener noreferrer">Falar com Especialista</a>
+                  </Button>
                 </CardFooter>
               </Card>
             </div>
@@ -212,7 +216,7 @@ const Index = () => {
               <AccordionItem value="item-1" className="border border-gray-100 rounded-lg px-6 data-[state=open]:bg-[#00C7B7]/5 data-[state=open]:border-[#00C7B7]/20 transition-all">
                 <AccordionTrigger className="hover:no-underline font-semibold text-[#2c4964] text-left">Como faço para assinar?</AccordionTrigger>
                 <AccordionContent className="text-gray-600 text-base pb-4">
-                  Basta escolher o plano Pro, preencher seus dados e sua loja estará pronta em minutos com um subdomínio exclusivo para você configurar e começar a vender.
+                  Basta entrar em contato pelo WhatsApp e agendar uma demonstração. Em minutos nossa equipe pode deixar sua loja pronta com um subdomínio exclusivo para você configurar e começar a vender.
                 </AccordionContent>
               </AccordionItem>
               <AccordionItem value="item-2" className="border border-gray-100 rounded-lg px-6 data-[state=open]:bg-[#00C7B7]/5 data-[state=open]:border-[#00C7B7]/20 transition-all">
@@ -240,9 +244,9 @@ const Index = () => {
           <div className="container relative z-10">
              <span className="badge mb-6 px-4 py-2 rounded-full font-bold border border-white/20 text-white bg-white/5 backdrop-blur-sm inline-block"><Rocket className="inline w-4 h-4 mr-1"/> PLATAFORMA SAAS</span>
             <h2 className="text-4xl md:text-5xl font-bold mb-6 font-['Montserrat']">Sua loja virtual <span className="text-[#00C7B7]">exclusiva</span>.</h2>
-            <p className="text-xl text-white/70 mb-10 max-w-2xl mx-auto font-light">Assine a Inove SaaS agora e tenha acesso imediato a um ambiente seguro, escalável e pronto para impulsionar suas vendas.</p>
+            <p className="text-xl text-white/70 mb-10 max-w-2xl mx-auto font-light">Agende uma demonstração da Inove SaaS agora e veja como ter acesso a um ambiente seguro, escalável e pronto para impulsionar suas vendas.</p>
             <Button size="lg" className="h-14 px-10 text-lg rounded-full bg-[#00C7B7] hover:bg-[#00a699] text-[#050a12] font-bold shadow-[0_8px_25px_rgba(0,199,183,0.3)] transition-all hover:-translate-y-1" asChild>
-              <Link to="/loja/demo">Crie sua Loja Agora <ArrowRight className="ml-2 h-5 w-5" /></Link>
+              <a href="https://wa.me/5581989035561?text=Olá, gostaria de agendar uma demonstração da Plataforma SaaS!" target="_blank" rel="noopener noreferrer">Agende uma Demonstração <ArrowRight className="ml-2 h-5 w-5" /></a>
             </Button>
           </div>
         </section>
