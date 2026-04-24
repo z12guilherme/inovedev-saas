@@ -663,7 +663,6 @@ function ProductCard({ product, storeSlug, onAddToCart, primaryColor }: {
       <div className="px-3 pb-3 mt-1">
          <Button 
             className="w-full h-8 text-xs font-semibold rounded shadow-sm opacity-100 sm:opacity-0 sm:translate-y-2 group-hover:opacity-100 group-hover:translate-y-0 transition-all text-white bg-blue-600 hover:bg-blue-700"
-            style={{ backgroundColor: primaryColor || '#2563eb' }}
             onClick={(e) => { e.preventDefault(); onAddToCart(); }}
           >
             Adicionar ao Carrinho
@@ -684,17 +683,21 @@ function ProductView({ store, settings, product, products, cartItemCount, onAddT
 }) {
   const [quantity, setQuantity] = useState(1);
   const hasDiscount = product.original_price && Number(product.original_price) > Number(product.price);
+  const discountPercent = hasDiscount ? Math.round((1 - Number(product.price) / Number(product.original_price!)) * 100) : 0;
+  const isFreeShipping = Number(product.price) > 99;
 
   return (
-    <div className="min-h-screen flex flex-col">
-      <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur">
+    <div className="min-h-screen flex flex-col bg-[#ebebeb]">
+      <header className="sticky top-0 z-50 w-full bg-[#fff159] shadow-sm transition-all" style={{ backgroundColor: settings?.primary_color || '#fff159' }}>
         <div className="container flex h-16 items-center justify-between">
-          <Link to={`/loja/${store.slug}`} className="font-bold text-xl" style={{ color: settings?.primary_color || 'inherit' }}>{store.name}</Link>
+          <Link to={`/loja/${store.slug}`} className="font-bold text-xl flex items-center gap-2 text-gray-900 drop-shadow-sm">
+            <Store className="w-6 h-6"/> {store.name}
+          </Link>
           <Link to={`/loja/${store.slug}/carrinho`}>
-            <Button variant="ghost" size="icon" className="relative">
-              <ShoppingCart className="h-5 w-5" />
+            <Button variant="ghost" size="icon" className="relative hover:bg-black/5 text-gray-900">
+              <ShoppingCart className="h-6 w-6" />
               {cartItemCount > 0 && (
-                <Badge className="absolute -top-1 -right-1 h-5 w-5 rounded-full p-0 flex items-center justify-center text-xs">
+                <Badge className="absolute -top-1 -right-1 h-5 w-5 rounded-full p-0 flex items-center justify-center text-[10px] font-bold bg-red-500 text-white border-2 border-[#fff159]">
                   {cartItemCount}
                 </Badge>
               )}
@@ -703,69 +706,99 @@ function ProductView({ store, settings, product, products, cartItemCount, onAddT
         </div>
       </header>
 
-      <main className="flex-1 container py-8">
-        <Link to={`/loja/${store.slug}`} className="text-sm text-muted-foreground hover:text-primary mb-4 inline-block">
-          ← Voltar
+      <main className="flex-1 container py-8 max-w-[1200px] mx-auto">
+        <Link to={`/loja/${store.slug}`} className="text-sm text-blue-600 hover:text-blue-800 mb-6 inline-flex items-center gap-1 font-medium bg-white px-3 py-1.5 rounded-full shadow-sm w-fit">
+          <ArrowRight className="w-4 h-4 rotate-180"/> Voltar para a loja
         </Link>
 
-        <div className="grid md:grid-cols-2 gap-8">
-          <div className="aspect-square bg-muted rounded-lg overflow-hidden">
-            {product.image_url ? (
-              <img src={product.image_url} alt={product.name} className="object-cover w-full h-full" />
-            ) : (
-              <div className="w-full h-full flex items-center justify-center text-6xl">📦</div>
-            )}
-          </div>
+        <div className="bg-white rounded-lg shadow-sm border border-gray-100 overflow-hidden">
+          <div className="grid md:grid-cols-2 gap-0 divide-y md:divide-y-0 md:divide-x border-gray-100">
+            <div className="aspect-square bg-white relative p-8 flex items-center justify-center">
+              {product.image_url ? (
+                <img src={product.image_url} alt={product.name} className="object-contain w-full h-full mix-blend-multiply" />
+              ) : (
+                <div className="w-full h-full flex items-center justify-center text-6xl text-gray-200 bg-gray-50 rounded-lg">📦</div>
+              )}
+            </div>
 
-          <div className="space-y-6">
-            <div>
-              <h1 className="text-3xl font-bold">{product.name}</h1>
+            <div className="p-6 md:p-10 flex flex-col">
+              <div className="mb-2 text-xs text-gray-400 font-semibold uppercase tracking-wider">Novo | {product.stock} disponíveis</div>
+              
+              <h1 className="text-2xl font-semibold text-gray-900 mb-2 leading-tight">{product.name}</h1>
+              
               {product.stock <= 5 && product.stock > 0 && (
-                <Badge variant="secondary" className="mt-2">Últimas {product.stock} unidades</Badge>
+                <Badge className="bg-orange-100 text-orange-700 hover:bg-orange-100 border-none w-fit mb-4">Últimas {product.stock} unidades</Badge>
               )}
-            </div>
 
-            <div className="flex items-baseline gap-3">
-              <span className="text-4xl font-bold" style={{ color: settings?.primary_color || 'inherit' }}>{formatCurrency(Number(product.price))}</span>
-              {hasDiscount && (
-                <span className="text-xl text-muted-foreground line-through">
-                  {formatCurrency(Number(product.original_price!))}
-                </span>
+              <div className="my-6">
+                {hasDiscount && (
+                  <span className="text-sm text-gray-400 line-through">
+                    {formatCurrency(Number(product.original_price!))}
+                  </span>
+                )}
+                <div className="flex items-center gap-3">
+                  <span className="text-4xl font-light text-gray-900 tracking-tight">{formatCurrency(Number(product.price))}</span>
+                  {hasDiscount && <span className="text-lg font-medium text-green-500">{discountPercent}% OFF</span>}
+                </div>
+                <div className="text-sm text-gray-600 mt-2">
+                  em <span className="text-green-500 font-medium">10x {formatCurrency(Number(product.price)/10)} sem juros</span>
+                </div>
+              </div>
+
+              {isFreeShipping && (
+                <div className="flex items-center gap-2 text-green-500 font-medium text-sm mb-6 bg-green-50 p-3 rounded-lg w-fit">
+                  <Truck className="w-5 h-5"/>
+                  <div>
+                    <span className="block">Frete grátis</span>
+                    <span className="text-xs text-gray-500 font-normal">Saiba os prazos de entrega e as formas de envio.</span>
+                  </div>
+                </div>
               )}
-            </div>
 
-            {product.description && (
-              <p className="text-muted-foreground">{product.description}</p>
-            )}
+              {product.description && (
+                <div className="mb-8">
+                  <h3 className="text-lg font-medium text-gray-900 mb-2">Descrição</h3>
+                  <p className="text-gray-600 text-sm leading-relaxed">{product.description}</p>
+                </div>
+              )}
 
-            <div className="flex items-center gap-4">
-              <span className="font-medium">Quantidade:</span>
-              <div className="flex items-center border rounded-md">
-                <Button variant="ghost" size="icon" onClick={() => setQuantity(q => Math.max(1, q - 1))}>
-                  <Minus className="h-4 w-4" />
+              <div className="mt-auto space-y-6">
+                <div className="flex items-center gap-4">
+                  <span className="font-medium text-gray-900">Quantidade:</span>
+                  <div className="flex items-center border border-gray-200 rounded-md bg-white">
+                    <Button variant="ghost" size="icon" className="h-10 w-10 text-gray-500 hover:bg-gray-50" onClick={() => setQuantity(q => Math.max(1, q - 1))}>
+                      <Minus className="h-4 w-4" />
+                    </Button>
+                    <span className="w-12 text-center font-medium text-gray-900">{quantity}</span>
+                    <Button variant="ghost" size="icon" className="h-10 w-10 text-gray-500 hover:bg-gray-50" onClick={() => setQuantity(q => Math.min(product.stock, q + 1))}>
+                      <Plus className="h-4 w-4" />
+                    </Button>
+                  </div>
+                  <span className="text-xs text-gray-400">({product.stock} disponíveis)</span>
+                </div>
+
+                <Button 
+                  size="lg" 
+                  className="w-full h-14 text-base font-bold shadow-md hover:shadow-lg transition-all text-white bg-blue-600 hover:bg-blue-700" 
+                  onClick={() => onAddToCart(product, quantity)}>
+                  Adicionar ao Carrinho
                 </Button>
-                <span className="w-12 text-center">{quantity}</span>
-                <Button variant="ghost" size="icon" onClick={() => setQuantity(q => Math.min(product.stock, q + 1))}>
-                  <Plus className="h-4 w-4" />
-                </Button>
+
+                {settings && (
+                  <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 p-4 bg-gray-50 rounded-lg text-sm text-gray-600 border border-gray-100">
+                    <ShieldCheck className="w-8 h-8 text-gray-400 shrink-0"/>
+                    <div>
+                      <p><strong>Compra Garantida</strong>, receba o produto que está esperando ou devolvemos o dinheiro.</p>
+                      <div className="flex gap-4 mt-1 text-xs text-gray-500">
+                        <span>Taxa de entrega: {formatCurrency(Number(settings.delivery_fee))}</span>
+                        <span>•</span>
+                        <span>Pedido mínimo: {formatCurrency(Number(settings.min_order_value))}</span>
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
-
-            <Button 
-              size="lg" 
-              className="w-full" 
-              style={{ backgroundColor: settings?.primary_color || undefined }}
-              onClick={() => onAddToCart(product, quantity)}>
-              <ShoppingCart className="mr-2 h-5 w-5" />
-              Adicionar ao Carrinho
-            </Button>
-
-            {settings && (
-              <div className="border rounded-lg p-4 bg-muted/30 text-sm">
-                <p><strong>Taxa de entrega:</strong> {formatCurrency(Number(settings.delivery_fee))}</p>
-                <p className="text-muted-foreground">Pedido mínimo: {formatCurrency(Number(settings.min_order_value))}</p>
-              </div>
-            )}
           </div>
         </div>
       </main>
@@ -786,18 +819,23 @@ function CartView({ store, settings, cart, cartTotal, onUpdateQuantity }: {
 
   if (cart.length === 0) {
     return (
-      <div className="min-h-screen flex flex-col">
-        <header className="border-b">
-          <div className="container h-16 flex items-center">
-            <Link to={`/loja/${store.slug}`} className="font-bold text-xl" style={{ color: settings?.primary_color || 'inherit' }}>{store.name}</Link>
+      <div className="min-h-screen flex flex-col bg-[#ebebeb]">
+        <header className="sticky top-0 z-50 w-full bg-[#fff159] shadow-sm transition-all" style={{ backgroundColor: settings?.primary_color || '#fff159' }}>
+          <div className="container flex h-16 items-center">
+            <Link to={`/loja/${store.slug}`} className="font-bold text-xl flex items-center gap-2 text-gray-900 drop-shadow-sm">
+              <Store className="w-6 h-6"/> {store.name}
+            </Link>
           </div>
         </header>
-        <main className="flex-1 flex items-center justify-center">
-          <div className="text-center">
-            <ShoppingCart className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
-            <h1 className="text-2xl font-bold mb-2">Carrinho vazio</h1>
-            <Button asChild>
-              <Link to={`/loja/${store.slug}`}>Ver Produtos</Link>
+        <main className="flex-1 flex items-center justify-center p-4">
+          <div className="text-center bg-white p-10 rounded-xl shadow-sm border border-gray-100 max-w-md w-full">
+            <div className="w-20 h-20 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-6">
+              <ShoppingCart className="h-10 w-10 text-gray-400" />
+            </div>
+            <h1 className="text-2xl font-semibold text-gray-900 mb-2">Seu carrinho está vazio</h1>
+            <p className="text-gray-500 mb-8">Navegue pelas categorias ou busque pelo produto desejado.</p>
+            <Button asChild className="w-full h-12 text-base font-bold shadow-md hover:shadow-lg transition-all text-white bg-blue-600 hover:bg-blue-700">
+              <Link to={`/loja/${store.slug}`}>Escolher produtos</Link>
             </Button>
           </div>
         </main>
@@ -806,85 +844,91 @@ function CartView({ store, settings, cart, cartTotal, onUpdateQuantity }: {
   }
 
   return (
-    <div className="min-h-screen flex flex-col">
-      <header className="border-b">
-        <div className="container h-16 flex items-center">
-          <Link to={`/loja/${store.slug}`} className="font-bold text-xl" style={{ color: settings?.primary_color || 'inherit' }}>{store.name}</Link>
+    <div className="min-h-screen flex flex-col bg-[#ebebeb]">
+      <header className="sticky top-0 z-50 w-full bg-[#fff159] shadow-sm transition-all" style={{ backgroundColor: settings?.primary_color || '#fff159' }}>
+        <div className="container flex h-16 items-center">
+          <Link to={`/loja/${store.slug}`} className="font-bold text-xl flex items-center gap-2 text-gray-900 drop-shadow-sm">
+            <Store className="w-6 h-6"/> {store.name}
+          </Link>
         </div>
       </header>
 
-      <main className="flex-1 container py-8">
-        <Link to={`/loja/${store.slug}`} className="text-sm text-muted-foreground hover:text-primary mb-4 inline-block">
-          ← Continuar comprando
+      <main className="flex-1 container py-8 max-w-[1000px] mx-auto">
+        <Link to={`/loja/${store.slug}`} className="text-sm text-blue-600 hover:text-blue-800 mb-6 inline-flex items-center gap-1 font-medium bg-white px-3 py-1.5 rounded-full shadow-sm w-fit">
+          <ArrowRight className="w-4 h-4 rotate-180"/> Continuar comprando
         </Link>
-        <h1 className="text-2xl font-bold mb-6">Meu Carrinho</h1>
+        <h1 className="text-2xl font-semibold text-gray-900 mb-6">Meu Carrinho</h1>
 
-        <div className="grid lg:grid-cols-3 gap-8">
+        <div className="grid lg:grid-cols-3 gap-6">
           <div className="lg:col-span-2 space-y-4">
-            {cart.map(item => (
-              <Card key={item.product.id}>
-                <CardContent className="flex gap-4 p-4">
-                  <div className="w-20 h-20 bg-muted rounded-md flex-shrink-0 overflow-hidden">
+            <div className="bg-white rounded-lg shadow-sm border border-gray-100 overflow-hidden divide-y divide-gray-100">
+              {cart.map(item => (
+                <div key={item.product.id} className="p-6 flex flex-col sm:flex-row gap-6 items-start sm:items-center">
+                  <div className="w-24 h-24 bg-gray-50 rounded-md border border-gray-100 flex-shrink-0 flex items-center justify-center p-2">
                     {item.product.image_url ? (
-                      <img src={item.product.image_url} alt={item.product.name} className="w-full h-full object-cover" />
+                      <img src={item.product.image_url} alt={item.product.name} className="w-full h-full object-contain mix-blend-multiply" />
                     ) : (
-                      <div className="w-full h-full flex items-center justify-center text-2xl">📦</div>
+                      <div className="text-3xl text-gray-300">📦</div>
                     )}
                   </div>
-                  <div className="flex-1">
-                    <h3 className="font-medium">{item.product.name}</h3>
-                    <p className="font-bold" style={{ color: settings?.primary_color || 'inherit' }}>{formatCurrency(Number(item.product.price))}</p>
-                    <div className="flex items-center gap-2 mt-2">
-                      <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => onUpdateQuantity(item.product.id, item.quantity - 1)}>
+                  <div className="flex-1 min-w-0">
+                    <h3 className="font-medium text-gray-900 line-clamp-2 leading-tight mb-2">{item.product.name}</h3>
+                    <p className="text-xl font-light tracking-tight text-gray-900">{formatCurrency(Number(item.product.price))}</p>
+                  </div>
+                  <div className="flex flex-col items-end gap-4 w-full sm:w-auto">
+                    <div className="flex items-center border border-gray-200 rounded-md bg-white">
+                      <Button variant="ghost" size="icon" className="h-9 w-9 text-gray-500 hover:bg-gray-50" onClick={() => onUpdateQuantity(item.product.id, item.quantity - 1)}>
                         <Minus className="h-3 w-3" />
                       </Button>
-                      <span className="w-8 text-center">{item.quantity}</span>
-                      <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => onUpdateQuantity(item.product.id, item.quantity + 1)}>
+                      <span className="w-10 text-center text-sm font-medium text-gray-900">{item.quantity}</span>
+                      <Button variant="ghost" size="icon" className="h-9 w-9 text-gray-500 hover:bg-gray-50" onClick={() => onUpdateQuantity(item.product.id, item.quantity + 1)}>
                         <Plus className="h-3 w-3" />
                       </Button>
-                      <Button variant="ghost" size="icon" className="h-8 w-8 ml-auto text-destructive" onClick={() => onUpdateQuantity(item.product.id, 0)}>
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
                     </div>
+                    <Button variant="ghost" size="sm" className="text-blue-600 hover:text-blue-700 hover:bg-blue-50 px-2 h-8" onClick={() => onUpdateQuantity(item.product.id, 0)}>
+                      Excluir
+                    </Button>
                   </div>
-                </CardContent>
-              </Card>
-            ))}
+                </div>
+              ))}
+            </div>
           </div>
 
           <div>
-            <Card>
-              <CardContent className="p-6">
-                <h2 className="font-bold mb-4">Resumo</h2>
-                <div className="space-y-2 text-sm">
-                  <div className="flex justify-between">
-                    <span>Subtotal</span>
-                    <span>{formatCurrency(cartTotal)}</span>
+            <div className="bg-white rounded-lg shadow-sm border border-gray-100 sticky top-24 overflow-hidden">
+              <div className="p-6">
+                <h2 className="font-semibold text-gray-900 mb-6 text-lg">Resumo da compra</h2>
+                <div className="space-y-4 text-sm text-gray-600">
+                  <div className="flex justify-between items-center">
+                    <span>Produtos ({cart.reduce((a, b) => a + b.quantity, 0)})</span>
+                    <span className="text-gray-900">{formatCurrency(cartTotal)}</span>
                   </div>
-                  <div className="flex justify-between">
+                  <div className="flex justify-between items-center">
                     <span>Entrega</span>
-                    <span>{formatCurrency(Number(settings?.delivery_fee || 0))}</span>
+                    <span className="text-gray-900">{settings?.delivery_fee ? formatCurrency(Number(settings.delivery_fee)) : 'Grátis'}</span>
                   </div>
-                  <div className="border-t pt-2 flex justify-between font-bold text-lg">
-                    <span>Total</span>
-                    <span style={{ color: settings?.primary_color || 'inherit' }}>{formatCurrency(grandTotal)}</span>
+                  <div className="border-t border-gray-100 pt-4 mt-4 flex justify-between items-center">
+                    <span className="text-base text-gray-900 font-semibold">Total</span>
+                    <span className="text-xl font-light text-gray-900 tracking-tight">{formatCurrency(grandTotal)}</span>
                   </div>
                 </div>
                 {!canCheckout && settings && (
-                  <p className="text-sm text-destructive mt-4">
-                    Pedido mínimo: {formatCurrency(Number(settings.min_order_value))}
-                  </p>
+                  <div className="mt-6 bg-red-50 text-red-600 text-sm p-3 rounded-md flex items-start gap-2">
+                    <XCircle className="w-4 h-4 mt-0.5 shrink-0" />
+                    <p>O pedido mínimo para esta loja é de <strong>{formatCurrency(Number(settings.min_order_value))}</strong>.</p>
+                  </div>
                 )}
+              </div>
+              <div className="p-6 pt-0">
                 <Button 
-                  className="w-full mt-4" 
+                  className="w-full h-12 text-base font-bold shadow-md hover:shadow-lg transition-all text-white bg-blue-600 hover:bg-blue-700" 
                   disabled={!canCheckout} 
                   asChild
-                  style={{ backgroundColor: settings?.primary_color || undefined }}
                 >
-                  <Link to={`/loja/${store.slug}/checkout`}>Finalizar Pedido</Link>
+                  <Link to={`/loja/${store.slug}/checkout`}>Continuar a compra</Link>
                 </Button>
-              </CardContent>
-            </Card>
+              </div>
+            </div>
           </div>
         </div>
       </main>
@@ -995,7 +1039,6 @@ function CheckoutView({ store, settings, cart, cartTotal, onClearCart }: {
         }
       }
 
-
       setOrderNumber(order.order_number);
       setOrderSent(true);
       toast.success('Pedido criado com sucesso!');
@@ -1009,15 +1052,15 @@ function CheckoutView({ store, settings, cart, cartTotal, onClearCart }: {
 
   if (orderSent) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center max-w-md px-4">
-          <div className="h-16 w-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4">
-            <MessageCircle className="h-8 w-8 text-primary" />
+      <div className="min-h-screen flex items-center justify-center bg-[#ebebeb]">
+        <div className="text-center max-w-md px-6 py-10 bg-white rounded-xl shadow-sm border border-gray-100">
+          <div className="h-20 w-20 rounded-full bg-green-50 flex items-center justify-center mx-auto mb-6">
+            <CheckCircle className="h-10 w-10 text-green-500" />
           </div>
-          <h1 className="text-2xl font-bold mb-2">Pedido #{orderNumber} Enviado!</h1>
-          <p className="text-muted-foreground mb-6">Seu pedido foi registrado e enviado para a loja.</p>
-          <Button onClick={() => { onClearCart(); navigate(`/loja/${store.slug}`); }}>
-            Voltar à Loja
+          <h1 className="text-2xl font-bold text-gray-900 mb-2">Pedido #{orderNumber} Recebido!</h1>
+          <p className="text-gray-500 mb-8">Recebemos o seu pedido. Caso tenha selecionado Pix ou Cartão na entrega, nossa equipe entrará em contato.</p>
+          <Button className="w-full h-12 text-white bg-blue-600 hover:bg-blue-700 font-bold" onClick={() => { onClearCart(); navigate(`/loja/${store.slug}`); }}>
+            Voltar para a Loja
           </Button>
         </div>
       </div>
@@ -1025,159 +1068,194 @@ function CheckoutView({ store, settings, cart, cartTotal, onClearCart }: {
   }
 
   return (
-    <div className="min-h-screen flex flex-col">
-      <header className="border-b">
-        <div className="container h-16 flex items-center">
-          <Link to={`/loja/${store.slug}`} className="font-bold text-xl" style={{ color: settings?.primary_color || 'inherit' }}>{store.name}</Link>
+    <div className="min-h-screen flex flex-col bg-[#ebebeb]">
+      <header className="sticky top-0 z-50 w-full bg-[#fff159] shadow-sm transition-all" style={{ backgroundColor: settings?.primary_color || '#fff159' }}>
+        <div className="container flex h-16 items-center">
+          <Link to={`/loja/${store.slug}`} className="font-bold text-xl flex items-center gap-2 text-gray-900 drop-shadow-sm">
+            <Store className="w-6 h-6"/> {store.name}
+          </Link>
         </div>
       </header>
 
-      <main className="flex-1 container py-8">
-        <Link to={`/loja/${store.slug}/carrinho`} className="text-sm text-muted-foreground hover:text-primary mb-4 inline-block">
-          ← Voltar ao carrinho
+      <main className="flex-1 container py-8 max-w-[1000px] mx-auto">
+        <Link to={`/loja/${store.slug}/carrinho`} className="text-sm text-blue-600 hover:text-blue-800 mb-6 inline-flex items-center gap-1 font-medium bg-white px-3 py-1.5 rounded-full shadow-sm w-fit">
+          <ArrowRight className="w-4 h-4 rotate-180"/> Voltar ao carrinho
         </Link>
-        <h1 className="text-2xl font-bold mb-6">Finalizar Pedido</h1>
+        <h1 className="text-2xl font-semibold text-gray-900 mb-6">Finalizar Compra</h1>
 
         <form onSubmit={handleSubmit}>
-          <div className="grid lg:grid-cols-3 gap-8">
+          <div className="grid lg:grid-cols-3 gap-6">
             <div className="lg:col-span-2 space-y-6">
               {/* Customer */}
-              <Card>
-                <CardContent className="p-6 space-y-4">
-                  <h2 className="font-bold">Seus Dados</h2>
-                  <div className="grid sm:grid-cols-2 gap-4">
+              <div className="bg-white rounded-lg shadow-sm border border-gray-100 overflow-hidden">
+                <div className="p-6">
+                  <h2 className="text-lg font-semibold text-gray-900 mb-6 flex items-center gap-2">
+                    <div className="w-6 h-6 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center text-xs font-bold">1</div>
+                    Dados de Contato
+                  </h2>
+                  <div className="grid sm:grid-cols-2 gap-5">
                     <div>
-                      <Label>Nome *</Label>
-                      <Input value={formData.name} onChange={e => setFormData({ ...formData, name: e.target.value })} required />
+                      <Label className="text-gray-700">Nome completo *</Label>
+                      <Input className="mt-1.5 border-gray-200 focus:border-blue-500 focus:ring-blue-500 h-11 bg-white" value={formData.name} onChange={e => setFormData({ ...formData, name: e.target.value })} required />
                     </div>
                     <div>
-                      <Label>WhatsApp *</Label>
-                      <Input value={formData.phone} onChange={e => setFormData({ ...formData, phone: e.target.value })} required />
+                      <Label className="text-gray-700">WhatsApp *</Label>
+                      <Input className="mt-1.5 border-gray-200 focus:border-blue-500 focus:ring-blue-500 h-11 bg-white" value={formData.phone} onChange={e => setFormData({ ...formData, phone: e.target.value })} required />
                     </div>
                     <div className="sm:col-span-2">
-                      <Label>Email (Opcional)</Label>
-                      <Input type="email" value={formData.email} onChange={e => setFormData({ ...formData, email: e.target.value })} placeholder="Para receber o comprovante" />
+                      <Label className="text-gray-700">Email (Opcional)</Label>
+                      <Input type="email" className="mt-1.5 border-gray-200 focus:border-blue-500 focus:ring-blue-500 h-11 bg-white" value={formData.email} onChange={e => setFormData({ ...formData, email: e.target.value })} placeholder="Para receber o comprovante" />
                     </div>
                   </div>
-                </CardContent>
-              </Card>
+                </div>
+              </div>
 
               {/* Address */}
-              <Card>
-                <CardContent className="p-6 space-y-4">
-                  <h2 className="font-bold">Endereço de Entrega</h2>
-                  <div className="space-y-4">
+              <div className="bg-white rounded-lg shadow-sm border border-gray-100 overflow-hidden">
+                <div className="p-6">
+                  <h2 className="text-lg font-semibold text-gray-900 mb-6 flex items-center gap-2">
+                    <div className="w-6 h-6 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center text-xs font-bold">2</div>
+                    Endereço de Entrega
+                  </h2>
+                  <div className="space-y-5">
                     <div>
-                      <Label>Endereço *</Label>
-                      <Input value={formData.address} onChange={e => setFormData({ ...formData, address: e.target.value })} required />
+                      <Label className="text-gray-700">Rua/Avenida, Número *</Label>
+                      <Input className="mt-1.5 border-gray-200 focus:border-blue-500 focus:ring-blue-500 h-11 bg-white" value={formData.address} onChange={e => setFormData({ ...formData, address: e.target.value })} required />
                     </div>
-                    <div className="grid sm:grid-cols-2 gap-4">
+                    <div className="grid sm:grid-cols-2 gap-5">
                       <div>
-                        <Label>Bairro *</Label>
-                        <Input value={formData.neighborhood} onChange={e => setFormData({ ...formData, neighborhood: e.target.value })} required />
+                        <Label className="text-gray-700">Bairro *</Label>
+                        <Input className="mt-1.5 border-gray-200 focus:border-blue-500 focus:ring-blue-500 h-11 bg-white" value={formData.neighborhood} onChange={e => setFormData({ ...formData, neighborhood: e.target.value })} required />
                       </div>
                       <div>
-                        <Label>Cidade *</Label>
-                        <Input value={formData.city} onChange={e => setFormData({ ...formData, city: e.target.value })} required />
+                        <Label className="text-gray-700">Cidade *</Label>
+                        <Input className="mt-1.5 border-gray-200 focus:border-blue-500 focus:ring-blue-500 h-11 bg-white" value={formData.city} onChange={e => setFormData({ ...formData, city: e.target.value })} required />
                       </div>
                     </div>
-                    <div className="grid sm:grid-cols-2 gap-4">
+                    <div className="grid sm:grid-cols-2 gap-5">
                       <div>
-                        <Label>Complemento</Label>
-                        <Input value={formData.complement} onChange={e => setFormData({ ...formData, complement: e.target.value })} />
+                        <Label className="text-gray-700">Complemento</Label>
+                        <Input className="mt-1.5 border-gray-200 focus:border-blue-500 focus:ring-blue-500 h-11 bg-white" value={formData.complement} onChange={e => setFormData({ ...formData, complement: e.target.value })} placeholder="Apto, Bloco..." />
                       </div>
                       <div>
-                        <Label>Referência</Label>
-                        <Input value={formData.reference} onChange={e => setFormData({ ...formData, reference: e.target.value })} />
+                        <Label className="text-gray-700">Ponto de Referência</Label>
+                        <Input className="mt-1.5 border-gray-200 focus:border-blue-500 focus:ring-blue-500 h-11 bg-white" value={formData.reference} onChange={e => setFormData({ ...formData, reference: e.target.value })} />
                       </div>
                     </div>
                   </div>
-                </CardContent>
-              </Card>
+                </div>
+              </div>
 
               {/* Payment */}
-              <Card>
-                <CardContent className="p-6 space-y-4">
-                  <h2 className="font-bold">Pagamento</h2>
-                  <RadioGroup value={paymentMethod} onValueChange={setPaymentMethod}>
+              <div className="bg-white rounded-lg shadow-sm border border-gray-100 overflow-hidden">
+                <div className="p-6">
+                  <h2 className="text-lg font-semibold text-gray-900 mb-6 flex items-center gap-2">
+                    <div className="w-6 h-6 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center text-xs font-bold">3</div>
+                    Como você prefere pagar?
+                  </h2>
+                  <RadioGroup value={paymentMethod} onValueChange={setPaymentMethod} className="space-y-3">
                     {isMercadoPagoEnabled && (
-                      <label className="flex items-center gap-3 p-3 border rounded-lg cursor-pointer hover:bg-muted/50">
-                        <RadioGroupItem value="mercadopago" />
-                        <div className="flex items-center gap-2">
-                          <span className="font-medium">💳 Pagar Online</span>
-                          <span className="text-xs text-muted-foreground">(Pix, Cartão, Boleto)</span>
+                      <label className={`flex items-center gap-4 p-4 border rounded-xl cursor-pointer transition-colors ${paymentMethod === 'mercadopago' ? 'border-blue-500 bg-blue-50/50' : 'border-gray-200 hover:border-blue-300'}`}>
+                        <RadioGroupItem value="mercadopago" className="text-blue-600" />
+                        <div className="flex flex-col">
+                          <span className="font-medium text-gray-900 flex items-center gap-2">
+                            <CreditCard className="w-5 h-5 text-blue-500"/> Mercado Pago
+                          </span>
+                          <span className="text-xs text-gray-500 mt-0.5">Pague online com Pix, Cartão ou Boleto de forma segura</span>
                         </div>
                       </label>
                     )}
                     {settings?.accept_pix && (
-                      <label className="flex items-center gap-3 p-3 border rounded-lg cursor-pointer hover:bg-muted/50">
-                        <RadioGroupItem value="pix" />
-                        <span>Pix na entrega</span>
+                      <label className={`flex items-center gap-4 p-4 border rounded-xl cursor-pointer transition-colors ${paymentMethod === 'pix' ? 'border-blue-500 bg-blue-50/50' : 'border-gray-200 hover:border-blue-300'}`}>
+                        <RadioGroupItem value="pix" className="text-blue-600" />
+                        <div className="flex flex-col">
+                          <span className="font-medium text-gray-900">Pix na entrega</span>
+                          <span className="text-xs text-gray-500 mt-0.5">Pague ao receber o produto</span>
+                        </div>
                       </label>
                     )}
                     {settings?.accept_card && (
-                      <label className="flex items-center gap-3 p-3 border rounded-lg cursor-pointer hover:bg-muted/50">
-                        <RadioGroupItem value="card" />
-                        <span>Cartão na entrega</span>
+                      <label className={`flex items-center gap-4 p-4 border rounded-xl cursor-pointer transition-colors ${paymentMethod === 'card' ? 'border-blue-500 bg-blue-50/50' : 'border-gray-200 hover:border-blue-300'}`}>
+                        <RadioGroupItem value="card" className="text-blue-600" />
+                        <div className="flex flex-col">
+                          <span className="font-medium text-gray-900">Cartão na entrega</span>
+                          <span className="text-xs text-gray-500 mt-0.5">Levaremos a maquininha até você</span>
+                        </div>
                       </label>
                     )}
                     {settings?.accept_cash && (
-                      <label className="flex items-center gap-3 p-3 border rounded-lg cursor-pointer hover:bg-muted/50">
-                        <RadioGroupItem value="cash" />
-                        <span>Dinheiro</span>
+                      <label className={`flex items-center gap-4 p-4 border rounded-xl cursor-pointer transition-colors ${paymentMethod === 'cash' ? 'border-blue-500 bg-blue-50/50' : 'border-gray-200 hover:border-blue-300'}`}>
+                        <RadioGroupItem value="cash" className="text-blue-600" />
+                        <div className="flex flex-col">
+                          <span className="font-medium text-gray-900">Dinheiro</span>
+                          <span className="text-xs text-gray-500 mt-0.5">Pague em espécie ao receber</span>
+                        </div>
                       </label>
                     )}
                   </RadioGroup>
-                </CardContent>
-              </Card>
+                </div>
+              </div>
             </div>
 
             {/* Summary */}
             <div>
-              <Card className="sticky top-24">
-                <CardContent className="p-6">
-                  <h2 className="font-bold mb-4">Resumo</h2>
-                  <div className="space-y-2 text-sm mb-4">
+              <div className="bg-white rounded-lg shadow-sm border border-gray-100 sticky top-24 overflow-hidden">
+                <div className="p-6">
+                  <h2 className="font-semibold text-gray-900 mb-6 text-lg">Resumo</h2>
+                  <div className="space-y-4 text-sm mb-6 max-h-[300px] overflow-y-auto pr-2">
                     {cart.map(item => (
-                      <div key={item.product.id} className="flex justify-between">
-                        <span>{item.quantity}x {item.product.name}</span>
-                        <span>{formatCurrency(Number(item.product.price) * item.quantity)}</span>
+                      <div key={item.product.id} className="flex gap-3">
+                        <div className="w-12 h-12 bg-gray-50 rounded border border-gray-100 flex items-center justify-center flex-shrink-0">
+                          {item.product.image_url ? (
+                            <img src={item.product.image_url} alt={item.product.name} className="w-full h-full object-contain mix-blend-multiply p-1" />
+                          ) : (
+                            <span className="text-gray-300">📦</span>
+                          )}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-gray-900 font-medium line-clamp-1">{item.product.name}</p>
+                          <p className="text-gray-500 text-xs">Qtd: {item.quantity}</p>
+                        </div>
+                        <div className="text-right font-medium text-gray-900">
+                          {formatCurrency(Number(item.product.price) * item.quantity)}
+                        </div>
                       </div>
                     ))}
                   </div>
-                  <div className="border-t pt-2 space-y-2 text-sm">
-                    <div className="flex justify-between">
-                      <span>Subtotal</span>
-                      <span>{formatCurrency(cartTotal)}</span>
+                  <div className="border-t border-gray-100 pt-4 space-y-3 text-sm text-gray-600">
+                    <div className="flex justify-between items-center">
+                      <span>Produtos</span>
+                      <span className="text-gray-900">{formatCurrency(cartTotal)}</span>
                     </div>
-                    <div className="flex justify-between">
+                    <div className="flex justify-between items-center">
                       <span>Entrega</span>
-                      <span>{formatCurrency(Number(settings?.delivery_fee || 0))}</span>
+                      <span className="text-gray-900">{settings?.delivery_fee ? formatCurrency(Number(settings.delivery_fee)) : 'Grátis'}</span>
                     </div>
-                    <div className="border-t pt-2 flex justify-between font-bold text-lg">
-                      <span>Total</span>
-                      <span style={{ color: settings?.primary_color || 'inherit' }}>{formatCurrency(grandTotal)}</span>
+                    <div className="border-t border-gray-100 pt-4 mt-2 flex justify-between items-center">
+                      <span className="text-base text-gray-900 font-semibold">Você pagará</span>
+                      <span className="text-xl font-light text-gray-900 tracking-tight">{formatCurrency(grandTotal)}</span>
                     </div>
                   </div>
+                </div>
+                <div className="p-6 pt-0">
                   <Button 
                     type="submit" 
-                    className="w-full mt-4" 
+                    className="w-full h-12 text-base font-bold shadow-md hover:shadow-lg transition-all text-white bg-blue-600 hover:bg-blue-700" 
                     disabled={!isValid || submitting}
-                    style={{ backgroundColor: settings?.primary_color || undefined }}
                   >
                     {submitting ? (
                       <span className="animate-spin mr-2">⏳</span>
                     ) : paymentMethod === 'mercadopago' ? (
-                      <>💳 Pagar Agora</>
+                      <>Pagar e Finalizar</>
                     ) : (
-                      <>
-                        <ArrowRight className="mr-2 h-4 w-4" />
-                        Finalizar Pedido
-                      </>
+                      <>Confirmar Compra</>
                     )}
                   </Button>
-                </CardContent>
-              </Card>
+                  <p className="text-center text-[11px] text-gray-400 mt-4 flex items-center justify-center gap-1">
+                    <ShieldCheck className="w-3 h-3"/> Ambiente 100% Seguro
+                  </p>
+                </div>
+              </div>
             </div>
           </div>
         </form>
@@ -1247,8 +1325,8 @@ function SuccessView({ store, settings }: { store: StoreData; settings: StoreSet
       default:
         return {
           icon: CheckCircle,
-          color: 'text-primary',
-          bg: 'bg-primary/10',
+          color: 'text-blue-600',
+          bg: 'bg-blue-100',
           title: 'Pedido Realizado!',
           desc: 'Seu pedido foi enviado para a loja.'
         };
@@ -1259,48 +1337,68 @@ function SuccessView({ store, settings }: { store: StoreData; settings: StoreSet
   const Icon = info.icon;
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center p-4 bg-gray-50">
-      <Card className="w-full max-w-md text-center">
-        <CardContent className="pt-12 pb-8 px-6">
-          <div className={`mx-auto w-20 h-20 rounded-full flex items-center justify-center mb-6 ${info.bg}`}>
-            <Icon className={`w-10 h-10 ${info.color}`} />
-          </div>
-          
-          <h1 className={`text-2xl font-bold mb-2 ${info.color}`}>{info.title}</h1>
-          <p className="text-muted-foreground mb-8">{info.desc}</p>
-
-          {order && (
-            <div className="bg-muted/50 rounded-lg p-4 mb-8 text-sm">
-              <p className="font-medium">Pedido #{order.order_number}</p>
-              <p className="text-muted-foreground mt-1">Total: {formatCurrency(order.total)}</p>
-              {paymentId && <p className="text-xs text-muted-foreground mt-2">Ref. Pagamento: {paymentId}</p>}
+    <div className="min-h-screen flex flex-col bg-[#ebebeb]">
+      <header className="sticky top-0 z-50 w-full bg-[#fff159] shadow-sm transition-all" style={{ backgroundColor: settings?.primary_color || '#fff159' }}>
+        <div className="container flex h-16 items-center">
+          <Link to={`/loja/${store.slug}`} className="font-bold text-xl flex items-center gap-2 text-gray-900 drop-shadow-sm">
+            <Store className="w-6 h-6"/> {store.name}
+          </Link>
+        </div>
+      </header>
+      <div className="flex-1 flex flex-col items-center justify-center p-4">
+        <div className="bg-white w-full max-w-md text-center rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+          <div className="p-10">
+            <div className={`mx-auto w-24 h-24 rounded-full flex items-center justify-center mb-6 shadow-inner ${info.bg}`}>
+              <Icon className={`w-12 h-12 ${info.color}`} />
             </div>
-          )}
-
-          <div className="space-y-3">
-            {settings?.whatsapp_number && (
-              <Button className="w-full" variant="outline" asChild>
-                <a
-                  href={`https://wa.me/${settings.whatsapp_number.replace(/\D/g, '')}?text=Olá, acabei de fazer o pedido #${order?.order_number || ''}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  <MessageCircle className="mr-2 h-4 w-4" />
-                  Acompanhar no WhatsApp
-                </a>
-              </Button>
-            )}
             
-            <Button 
-              className="w-full" 
-              style={{ backgroundColor: settings?.primary_color || undefined }}
-              asChild
-            >
-              <Link to={`/loja/${store.slug}`}>Voltar para a Loja</Link>
-            </Button>
+            <h1 className={`text-2xl font-bold mb-3 ${info.color}`}>{info.title}</h1>
+            <p className="text-gray-600 mb-8 leading-relaxed">{info.desc}</p>
+
+            {order && (
+              <div className="bg-gray-50 rounded-lg p-5 mb-8 text-sm border border-gray-100 shadow-inner text-left">
+                <p className="font-medium text-gray-900 mb-2 border-b border-gray-200 pb-2">Detalhes do Pedido</p>
+                <div className="flex justify-between items-center mt-3">
+                  <span className="text-gray-500">Número</span>
+                  <span className="font-medium text-gray-900">#{order.order_number}</span>
+                </div>
+                <div className="flex justify-between items-center mt-2">
+                  <span className="text-gray-500">Total Pago</span>
+                  <span className="font-medium text-green-600">{formatCurrency(order.total)}</span>
+                </div>
+                {paymentId && (
+                  <div className="flex justify-between items-center mt-2">
+                    <span className="text-gray-500">Transação</span>
+                    <span className="font-medium text-gray-700 text-xs">{paymentId}</span>
+                  </div>
+                )}
+              </div>
+            )}
+
+            <div className="space-y-3">
+              {settings?.whatsapp_number && (
+                <Button className="w-full h-12 text-blue-600 bg-blue-50 hover:bg-blue-100 border-none font-medium" variant="outline" asChild>
+                  <a
+                    href={`https://wa.me/${settings.whatsapp_number.replace(/\D/g, '')}?text=Olá, acabei de fazer o pedido #${order?.order_number || ''}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    <MessageCircle className="mr-2 h-5 w-5" />
+                    Acompanhar no WhatsApp
+                  </a>
+                </Button>
+              )}
+              
+              <Button 
+                className="w-full h-12 text-base font-bold shadow-sm transition-all text-white bg-blue-600 hover:bg-blue-700" 
+                asChild
+              >
+                <Link to={`/loja/${store.slug}`}>Voltar para o Início</Link>
+              </Button>
+            </div>
           </div>
-        </CardContent>
-      </Card>
+        </div>
+      </div>
     </div>
   );
 }
