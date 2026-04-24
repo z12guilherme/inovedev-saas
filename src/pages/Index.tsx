@@ -26,24 +26,23 @@ const Index = () => {
 
   if (!config) {
     return (
-      <div className="min-h-screen bg-background flex flex-col saas-landing" style={{ '--primary': '217 91% 60%', '--ring': '217 91% 60%' } as React.CSSProperties}>
+      <div className="min-h-screen bg-background flex flex-col saas-landing font-sans">
         {/* Navbar SaaS */}
-        <header className="border-b border-blue-100 bg-white/80 backdrop-blur-md sticky top-0 z-50">
-          <div className="container flex h-16 items-center justify-between">
-            <div className="flex items-center gap-2 font-bold text-xl text-primary">
-              <img src={logoImg} alt="Logo" className="h-8 w-8 rounded-lg object-cover" />
-              Inove Dev SaaS
+        <header className="border-b border-white/10 bg-[#0d1b2a]/90 backdrop-blur-md sticky top-0 z-50">
+          <div className="container flex h-20 items-center justify-between">
+            <div className="flex items-center gap-2 font-bold text-2xl text-white">
+              <img src={logoImg} alt="Logo" className="h-10 w-10 object-contain rounded" />
+              <span className="tracking-wide">Inove SaaS</span>
             </div>
-            <nav className="hidden md:flex items-center gap-6 text-sm font-medium">
-              <a href="#features" className="hover:text-primary transition-colors">Recursos</a>
-              <a href="#how-it-works" className="hover:text-primary transition-colors">Como Funciona</a>
-              <a href="#pricing" className="hover:text-primary transition-colors">Planos</a>
-              <a href="#faq" className="hover:text-primary transition-colors">FAQ</a>
-              <a href="#demo" className="hover:text-primary transition-colors">Demonstração</a>
-              <Link to="/admin/login" className="hover:text-primary transition-colors">Login</Link>
+            <nav className="hidden md:flex items-center gap-6 text-[15px] font-medium text-white/90">
+              <a href="#features" className="hover:text-[#00C7B7] transition-colors">Recursos</a>
+              <a href="#how-it-works" className="hover:text-[#00C7B7] transition-colors">Como Funciona</a>
+              <a href="#pricing" className="hover:text-[#00C7B7] transition-colors">Planos</a>
+              <a href="#faq" className="hover:text-[#00C7B7] transition-colors">FAQ</a>
+              <Link to="/admin/login" className="hover:text-[#00C7B7] transition-colors">Login</Link>
             </nav>
             <div className="flex items-center gap-4">
-              <Button asChild>
+              <Button asChild className="bg-[#00C7B7] hover:bg-[#00a699] text-[#050a12] font-semibold rounded-full px-6">
                 <Link to="/admin/login">Área do Cliente</Link>
               </Button>
             </div>
@@ -51,60 +50,68 @@ const Index = () => {
         </header>
 
         {/* Hero Section */}
-        <section className="flex-1 flex flex-col justify-center py-20 md:py-32 relative overflow-hidden">
-          <div className="absolute inset-0 z-0">
-            <img 
-              src={heroBanner} 
-              alt="Banner" 
-              className="w-full h-full object-cover opacity-100 contrast-125 blur-sm"
-            />
-            <div className="absolute inset-0 bg-gradient-to-b from-transparent via-white/50 to-white" />
-          </div>
-          <div className="container text-center max-w-4xl relative z-10 animate-fade-in-up">
-            <div className="inline-flex items-center rounded-full border border-blue-200 px-3 py-1 text-sm font-semibold transition-colors bg-blue-50 text-blue-600 hover:bg-blue-100 mb-8">
-              <Zap className="mr-1 h-3 w-3" />
-              Plataforma Multi-tenant Pronta
+        <section className="flex-1 flex flex-col justify-center py-24 md:py-32 relative overflow-hidden bg-gradient-to-br from-[#0d1b2a] to-[#050a12]">
+          {/* Glowing orbs */}
+          <div className="absolute top-[-10%] left-[-10%] w-[450px] h-[450px] bg-[#00C7B7] rounded-full blur-[120px] opacity-20 animate-pulse"></div>
+          <div className="absolute bottom-[-15%] right-[-5%] w-[350px] h-[350px] bg-[#007BFF] rounded-full blur-[120px] opacity-20 animate-pulse delay-700"></div>
+          
+          <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.02)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.02)_1px,transparent_1px)] bg-[size:60px_60px]"></div>
+
+          <div className="container text-center max-w-4xl relative z-10">
+            <div className="inline-flex items-center rounded-full border border-[#00C7B7]/30 px-4 py-1.5 text-sm font-semibold text-[#b3c2d1] bg-[#0d1b2a]/60 backdrop-blur-sm mb-8 tracking-widest uppercase">
+              <span className="w-2 h-2 rounded-full bg-[#00C7B7] mr-2 shadow-[0_0_10px_#00C7B7] animate-pulse"></span>
+              Plataforma Multi-tenant
             </div>
-            <h1 className="text-5xl md:text-7xl font-extrabold tracking-tight mb-8 text-slate-900 drop-shadow-sm">
-              Sua Loja Virtual Profissional <span className="text-primary">Pronta para Vender</span>
+            <h1 className="text-5xl md:text-7xl font-extrabold tracking-tight mb-8 text-white drop-shadow-sm font-['Montserrat']">
+              Acelerando a sua <br />
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#00C7B7] to-[#48ebd9]">
+                Evolução Digital
+              </span>
             </h1>
-            <p className="text-xl md:text-2xl text-slate-600 mb-12 max-w-2xl mx-auto leading-relaxed">
-              A plataforma completa para você vender online. Gerencie produtos, pedidos e pagamentos em um único lugar. Sem complicações.
+            <p className="text-xl text-[#aeb9c6] mb-12 max-w-2xl mx-auto leading-relaxed font-light">
+              A plataforma SaaS completa para você criar, gerenciar e escalar sua loja virtual. Assine e já saia vendendo com sua própria marca.
             </p>
-            <div className="flex flex-col sm:flex-row items-center justify-center gap-4 animate-fade-in-up delay-200">
-              <Button size="lg" className="h-14 px-8 text-lg rounded-full shadow-xl shadow-blue-500/20 hover:shadow-blue-500/40 transition-all hover:-translate-y-1 text-black" asChild>
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-5">
+              <Button size="lg" className="h-14 px-8 text-lg rounded-full bg-[#00C7B7] hover:bg-[#00a699] text-[#050a12] font-bold shadow-[0_8px_25px_rgba(0,199,183,0.3)] transition-all hover:-translate-y-1" asChild>
                 <Link to="/loja/demo">
-                  Ver Loja Demo <ArrowRight className="ml-2 h-5 w-5" />
+                  Ver Demonstração <ArrowRight className="ml-2 h-5 w-5" />
                 </Link>
+              </Button>
+              <Button size="lg" variant="outline" className="h-14 px-8 text-lg rounded-full border-2 border-white/20 text-white hover:bg-white/5 hover:border-white transition-all hover:-translate-y-1 bg-transparent" asChild>
+                <a href="#pricing">Ver Planos</a>
               </Button>
             </div>
           </div>
         </section>
 
         {/* Features Grid */}
-        <section id="features" className="py-24 bg-slate-50">
+        <section id="features" className="py-24 bg-[#f8f9fa]">
           <div className="container">
+             <div className="text-center mb-16">
+              <span className="bg-[#00C7B7] text-[#050a12] px-3 py-1 rounded-full text-sm font-bold tracking-wide uppercase mb-4 inline-block shadow-md"><LayoutDashboard className="inline w-4 h-4 mr-1"/> Recursos Premium</span>
+              <h2 className="text-4xl font-bold mb-4 text-[#2c4964] font-['Montserrat'] uppercase relative pb-4 after:content-[''] after:absolute after:w-12 after:h-[3px] after:bg-[#00C7B7] after:bottom-0 after:left-1/2 after:-translate-x-1/2">Tudo que você precisa</h2>
+            </div>
             <div className="grid md:grid-cols-3 gap-8">
-              <div className="group p-8 rounded-3xl border border-blue-100 bg-white hover:border-blue-500/50 hover:shadow-2xl hover:shadow-blue-500/10 transition-all duration-500 hover:-translate-y-2 animate-fade-in-up delay-100">
-                <div className="h-14 w-14 bg-blue-50 rounded-2xl flex items-center justify-center mb-6 text-blue-600 group-hover:bg-blue-600 group-hover:text-white transition-colors duration-500">
-                  <LayoutDashboard className="h-6 w-6" />
+              <div className="group p-10 rounded-2xl bg-white border border-gray-100 shadow-[0_0_29px_rgba(68,88,144,0.05)] hover:shadow-[0_15px_40px_rgba(0,199,183,0.15)] transition-all duration-300 hover:-translate-y-2 text-center">
+                <div className="h-16 w-16 bg-blue-50/50 rounded-2xl flex items-center justify-center mx-auto mb-6 text-[#00C7B7] group-hover:scale-110 transition-transform duration-300">
+                  <LayoutDashboard className="h-8 w-8" />
                 </div>
-                <h3 className="text-2xl font-bold mb-3 text-slate-900">Painel Administrativo</h3>
-                <p className="text-slate-600 leading-relaxed">Gerencie sua loja com um dashboard intuitivo e completo para controle total.</p>
+                <h3 className="text-xl font-bold mb-3 text-[#2c4964] font-['Montserrat']">Painel Administrativo</h3>
+                <p className="text-gray-500 leading-relaxed text-[15px]">Gerencie sua loja com um dashboard intuitivo, multi-tenant e completo para controle total dos seus dados.</p>
               </div>
-              <div className="group p-8 rounded-3xl border border-blue-100 bg-white hover:border-blue-500/50 hover:shadow-2xl hover:shadow-blue-500/10 transition-all duration-500 hover:-translate-y-2 animate-fade-in-up delay-200">
-                <div className="h-14 w-14 bg-blue-50 rounded-2xl flex items-center justify-center mb-6 text-blue-600 group-hover:bg-blue-600 group-hover:text-white transition-colors duration-500">
-                  <ShoppingBag className="h-6 w-6" />
+              <div className="group p-10 rounded-2xl bg-white border border-gray-100 shadow-[0_0_29px_rgba(68,88,144,0.05)] hover:shadow-[0_15px_40px_rgba(0,199,183,0.15)] transition-all duration-300 hover:-translate-y-2 text-center">
+                <div className="h-16 w-16 bg-blue-50/50 rounded-2xl flex items-center justify-center mx-auto mb-6 text-[#00C7B7] group-hover:scale-110 transition-transform duration-300">
+                  <Zap className="h-8 w-8" />
                 </div>
-                <h3 className="text-2xl font-bold mb-3 text-slate-900">Loja Personalizável</h3>
-                <p className="text-slate-600 leading-relaxed">Sua marca, suas cores. Personalize a aparência da sua loja para seus clientes.</p>
+                <h3 className="text-xl font-bold mb-3 text-[#2c4964] font-['Montserrat']">Subdomínios Dinâmicos</h3>
+                <p className="text-gray-500 leading-relaxed text-[15px]">Sua marca em destaque com subdomínio próprio (minhamarca.inovedev) gerado automaticamente e seguro.</p>
               </div>
-              <div className="group p-8 rounded-3xl border border-blue-100 bg-white hover:border-blue-500/50 hover:shadow-2xl hover:shadow-blue-500/10 transition-all duration-500 hover:-translate-y-2 animate-fade-in-up delay-300">
-                <div className="h-14 w-14 bg-blue-50 rounded-2xl flex items-center justify-center mb-6 text-blue-600 group-hover:bg-blue-600 group-hover:text-white transition-colors duration-500">
-                  <CheckCircle2 className="h-6 w-6" />
+              <div className="group p-10 rounded-2xl bg-white border border-gray-100 shadow-[0_0_29px_rgba(68,88,144,0.05)] hover:shadow-[0_15px_40px_rgba(0,199,183,0.15)] transition-all duration-300 hover:-translate-y-2 text-center">
+                <div className="h-16 w-16 bg-blue-50/50 rounded-2xl flex items-center justify-center mx-auto mb-6 text-[#00C7B7] group-hover:scale-110 transition-transform duration-300">
+                  <ShieldCheck className="h-8 w-8" />
                 </div>
-                <h3 className="text-2xl font-bold mb-3 text-slate-900">Checkout Transparente</h3>
-                <p className="text-slate-600 leading-relaxed">Integração nativa com Mercado Pago e Pix para vendas seguras e rápidas.</p>
+                <h3 className="text-xl font-bold mb-3 text-[#2c4964] font-['Montserrat']">Alta Conversão</h3>
+                <p className="text-gray-500 leading-relaxed text-[15px]">Integração nativa de pagamentos e checkout rápido. Experiência focada em SEO e performance extrema.</p>
               </div>
             </div>
           </div>
@@ -114,81 +121,81 @@ const Index = () => {
         <section id="how-it-works" className="py-24 bg-white">
           <div className="container">
             <div className="text-center mb-16">
-              <h2 className="text-4xl font-bold mb-4 text-slate-900">Como funciona</h2>
-              <p className="text-slate-600 text-lg max-w-2xl mx-auto">
-                Crie sua loja em poucos minutos e comece a vender sem complicações.
+              <span className="bg-[#00C7B7] text-[#050a12] px-3 py-1 rounded-full text-sm font-bold tracking-wide uppercase mb-4 inline-block shadow-md"><Settings className="inline w-4 h-4 mr-1"/> Processo Simples</span>
+              <h2 className="text-4xl font-bold mb-4 text-[#2c4964] font-['Montserrat'] uppercase relative pb-4 after:content-[''] after:absolute after:w-12 after:h-[3px] after:bg-[#00C7B7] after:bottom-0 after:left-1/2 after:-translate-x-1/2">Como funciona</h2>
+              <p className="text-gray-500 text-lg max-w-2xl mx-auto mt-6">
+                Crie sua loja exclusiva em poucos minutos e comece a vender sem complicações.
               </p>
             </div>
             <div className="grid md:grid-cols-3 gap-8">
-              <div className="flex flex-col items-center text-center p-6 rounded-3xl hover:bg-slate-50 transition-colors duration-300">
-                <div className="h-20 w-20 bg-blue-100 rounded-full flex items-center justify-center mb-6 text-blue-600 shadow-inner">
+              <div className="flex flex-col items-center text-center p-6 group">
+                <div className="h-20 w-20 bg-white rounded-full flex items-center justify-center mb-6 text-[#00C7B7] shadow-[0_0_20px_rgba(0,0,0,0.1)] group-hover:bg-[#00C7B7] group-hover:text-white transition-all duration-300 transform group-hover:scale-110">
                   <Rocket className="h-8 w-8" />
                 </div>
-                <h3 className="text-xl font-bold mb-2">1. Contrate o plano</h3>
-                <p className="text-muted-foreground">Entre em contato para ativar sua loja com nossos especialistas.</p>
+                <h3 className="text-xl font-bold mb-2 text-[#2c4964]">1. Assine o plano</h3>
+                <p className="text-gray-500">Escolha a assinatura ideal e ative sua loja instantaneamente.</p>
               </div>
-              <div className="flex flex-col items-center text-center p-6 rounded-3xl hover:bg-slate-50 transition-colors duration-300">
-                <div className="h-20 w-20 bg-blue-100 rounded-full flex items-center justify-center mb-6 text-blue-600 shadow-inner">
+              <div className="flex flex-col items-center text-center p-6 group">
+                <div className="h-20 w-20 bg-white rounded-full flex items-center justify-center mb-6 text-[#00C7B7] shadow-[0_0_20px_rgba(0,0,0,0.1)] group-hover:bg-[#00C7B7] group-hover:text-white transition-all duration-300 transform group-hover:scale-110">
                   <Settings className="h-8 w-8" />
                 </div>
-                <h3 className="text-xl font-bold mb-2">2. Personalize</h3>
-                <p className="text-muted-foreground">Adicione seus produtos, escolha as cores e configure o pagamento.</p>
+                <h3 className="text-xl font-bold mb-2 text-[#2c4964]">2. Personalize</h3>
+                <p className="text-gray-500">Adicione seus produtos, escolha as cores e configure o pagamento.</p>
               </div>
-              <div className="flex flex-col items-center text-center p-6 rounded-3xl hover:bg-slate-50 transition-colors duration-300">
-                <div className="h-20 w-20 bg-blue-100 rounded-full flex items-center justify-center mb-6 text-blue-600 shadow-inner">
+              <div className="flex flex-col items-center text-center p-6 group">
+                <div className="h-20 w-20 bg-white rounded-full flex items-center justify-center mb-6 text-[#00C7B7] shadow-[0_0_20px_rgba(0,0,0,0.1)] group-hover:bg-[#00C7B7] group-hover:text-white transition-all duration-300 transform group-hover:scale-110">
                   <Zap className="h-8 w-8" />
                 </div>
-                <h3 className="text-xl font-bold mb-2">3. Comece a vender</h3>
-                <p className="text-muted-foreground">Divulgue seu link e receba pedidos diretamente no painel.</p>
+                <h3 className="text-xl font-bold mb-2 text-[#2c4964]">3. Comece a vender</h3>
+                <p className="text-gray-500">Divulgue seu link e receba pedidos diretamente no seu painel.</p>
               </div>
             </div>
           </div>
         </section>
 
         {/* Pricing */}
-        <section id="pricing" className="py-24 bg-slate-50">
+        <section id="pricing" className="py-24 bg-[#f8f9fa]">
           <div className="container">
             <div className="text-center mb-16">
-              <h2 className="text-4xl font-bold mb-4 text-slate-900">Planos simples e transparentes</h2>
-              <p className="text-slate-600 text-lg max-w-2xl mx-auto">
-                Escolha o plano ideal para o seu negócio. Sem taxas escondidas.
-              </p>
+              <span className="bg-[#00C7B7] text-[#050a12] px-3 py-1 rounded-full text-sm font-bold tracking-wide uppercase mb-4 inline-block shadow-md"><Store className="inline w-4 h-4 mr-1"/> Assinaturas</span>
+              <h2 className="text-4xl font-bold mb-4 text-[#2c4964] font-['Montserrat'] uppercase relative pb-4 after:content-[''] after:absolute after:w-12 after:h-[3px] after:bg-[#00C7B7] after:bottom-0 after:left-1/2 after:-translate-x-1/2">Planos Transparentes</h2>
             </div>
-            <div className="grid md:grid-cols-2 gap-8 max-w-3xl mx-auto">
-              <Card className="border-2 border-blue-500 relative overflow-hidden shadow-2xl shadow-blue-500/10 scale-105 z-10">
-                <div className="absolute top-0 right-0 bg-primary text-primary-foreground text-xs px-3 py-1 rounded-bl-lg font-medium">Popular</div>
-                <CardHeader>
-                  <CardTitle>Pro</CardTitle>
-                  <CardDescription>Para lojas em crescimento</CardDescription>
+            <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
+              <Card className="border-2 border-[#00C7B7] relative overflow-hidden shadow-[0_15px_40px_rgba(0,199,183,0.15)] md:scale-105 z-10 rounded-2xl bg-white">
+                <div className="absolute top-0 right-0 bg-[#00C7B7] text-[#050a12] text-xs px-4 py-1.5 rounded-bl-lg font-bold uppercase tracking-wider">Popular</div>
+                <CardHeader className="pt-8">
+                  <CardTitle className="text-3xl font-['Montserrat'] font-bold text-[#2c4964]">SaaS Pro</CardTitle>
+                  <CardDescription className="text-base">Para lojistas que querem escalar rápido</CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <div className="text-3xl font-bold mb-6">R$ 49,90<span className="text-sm font-normal text-muted-foreground">/mês</span></div>
-                  <ul className="space-y-2 text-sm">
-                    <li className="flex items-center gap-2"><Check className="h-4 w-4 text-primary" /> Produtos ilimitados</li>
-                    <li className="flex items-center gap-2"><Check className="h-4 w-4 text-primary" /> Domínio personalizado</li>
-                    <li className="flex items-center gap-2"><Check className="h-4 w-4 text-primary" /> Checkout transparente</li>
-                    <li className="flex items-center gap-2"><Check className="h-4 w-4 text-primary" /> Suporte prioritário</li>
+                  <div className="text-4xl font-bold mb-8 text-[#0d1b2a]">R$ 49,90<span className="text-base font-normal text-gray-500">/mês</span></div>
+                  <ul className="space-y-4 text-[15px] text-gray-600">
+                    <li className="flex items-center gap-3"><Check className="h-5 w-5 text-[#00C7B7]" /> Produtos ilimitados</li>
+                    <li className="flex items-center gap-3"><Check className="h-5 w-5 text-[#00C7B7]" /> Subdomínio dinâmico grátis</li>
+                    <li className="flex items-center gap-3"><Check className="h-5 w-5 text-[#00C7B7]" /> Checkout Mercado Pago & Pix</li>
+                    <li className="flex items-center gap-3"><Check className="h-5 w-5 text-[#00C7B7]" /> Dashboard Multi-tenant exclusivo</li>
                   </ul>
                 </CardContent>
-                <CardFooter>
-                  <Button className="w-full bg-blue-600 hover:bg-blue-700 text-white shadow-lg shadow-blue-500/25">Fale Conosco</Button>
+                <CardFooter className="pb-8">
+                  <Button className="w-full bg-[#00C7B7] hover:bg-[#00a699] text-[#050a12] font-bold rounded-full h-12 shadow-[0_8px_20px_rgba(0,199,183,0.25)] hover:-translate-y-1 transition-all">Assinar Agora</Button>
                 </CardFooter>
               </Card>
-              <Card className="border border-slate-200 shadow-lg hover:border-blue-300 transition-colors">
-                <CardHeader>
-                  <CardTitle>Enterprise</CardTitle>
-                  <CardDescription>Para grandes operações</CardDescription>
+              <Card className="border border-gray-200 shadow-lg hover:border-[#00C7B7]/50 transition-colors rounded-2xl bg-white mt-8 md:mt-0">
+                <CardHeader className="pt-8">
+                  <CardTitle className="text-3xl font-['Montserrat'] font-bold text-[#2c4964]">Enterprise</CardTitle>
+                  <CardDescription className="text-base">Desenvolvimento sob medida</CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <div className="text-3xl font-bold mb-6">Sob Consulta</div>
-                  <ul className="space-y-2 text-sm">
-                    <li className="flex items-center gap-2"><Check className="h-4 w-4 text-primary" /> Tudo do plano Pro</li>
-                    <li className="flex items-center gap-2"><Check className="h-4 w-4 text-primary" /> API dedicada</li>
-                    <li className="flex items-center gap-2"><Check className="h-4 w-4 text-primary" /> Gerente de conta</li>
+                  <div className="text-4xl font-bold mb-8 text-[#0d1b2a]">Sob Consulta</div>
+                  <ul className="space-y-4 text-[15px] text-gray-600">
+                    <li className="flex items-center gap-3"><Check className="h-5 w-5 text-[#00C7B7]" /> Tudo do plano Pro</li>
+                    <li className="flex items-center gap-3"><Check className="h-5 w-5 text-[#00C7B7]" /> Software 100% Personalizado</li>
+                    <li className="flex items-center gap-3"><Check className="h-5 w-5 text-[#00C7B7]" /> Integração com sistemas legados</li>
+                    <li className="flex items-center gap-3"><Check className="h-5 w-5 text-[#00C7B7]" /> Infraestrutura Dedicada</li>
                   </ul>
                 </CardContent>
-                <CardFooter>
-                  <Button className="w-full" variant="outline">Fale Conosco</Button>
+                <CardFooter className="pb-8">
+                  <Button className="w-full rounded-full h-12 font-bold border-2 border-[#0d1b2a] text-[#0d1b2a] hover:bg-[#0d1b2a] hover:text-white transition-all" variant="outline">Falar com Especialista</Button>
                 </CardFooter>
               </Card>
             </div>
@@ -199,25 +206,25 @@ const Index = () => {
         <section id="faq" className="py-24 bg-white">
           <div className="container max-w-3xl">
             <div className="text-center mb-16">
-              <h2 className="text-4xl font-bold mb-4 text-slate-900">Perguntas Frequentes</h2>
+              <h2 className="text-4xl font-bold mb-4 text-[#2c4964] font-['Montserrat'] uppercase relative pb-4 after:content-[''] after:absolute after:w-12 after:h-[3px] after:bg-[#00C7B7] after:bottom-0 after:left-1/2 after:-translate-x-1/2">Perguntas Frequentes</h2>
             </div>
-            <Accordion type="single" collapsible>
-              <AccordionItem value="item-1">
-                <AccordionTrigger>Como faço para contratar?</AccordionTrigger>
-                <AccordionContent>
-                  Entre em contato com nossa equipe comercial. Nós configuramos sua loja e você já começa a vender.
+            <Accordion type="single" collapsible className="space-y-4">
+              <AccordionItem value="item-1" className="border border-gray-100 rounded-lg px-6 data-[state=open]:bg-[#00C7B7]/5 data-[state=open]:border-[#00C7B7]/20 transition-all">
+                <AccordionTrigger className="hover:no-underline font-semibold text-[#2c4964] text-left">Como faço para assinar?</AccordionTrigger>
+                <AccordionContent className="text-gray-600 text-base pb-4">
+                  Basta escolher o plano Pro, preencher seus dados e sua loja estará pronta em minutos com um subdomínio exclusivo para você configurar e começar a vender.
                 </AccordionContent>
               </AccordionItem>
-              <AccordionItem value="item-2">
-                <AccordionTrigger>Posso usar meu próprio domínio?</AccordionTrigger>
-                <AccordionContent>
-                  Sim, no plano Pro você pode conectar seu domínio personalizado (ex: sualoja.com.br).
+              <AccordionItem value="item-2" className="border border-gray-100 rounded-lg px-6 data-[state=open]:bg-[#00C7B7]/5 data-[state=open]:border-[#00C7B7]/20 transition-all">
+                <AccordionTrigger className="hover:no-underline font-semibold text-[#2c4964] text-left">Preciso saber programar?</AccordionTrigger>
+                <AccordionContent className="text-gray-600 text-base pb-4">
+                  Não! A plataforma é totalmente intuitiva. Você gerencia seus produtos, cupons e pedidos através de um painel administrativo visual e simplificado.
                 </AccordionContent>
               </AccordionItem>
-              <AccordionItem value="item-3">
-                <AccordionTrigger>Como recebo pelos meus pedidos?</AccordionTrigger>
-                <AccordionContent>
-                  Você pode configurar sua chave Pix para receber diretamente na sua conta bancária ou integrar com o Mercado Pago para aceitar cartões e boletos.
+              <AccordionItem value="item-3" className="border border-gray-100 rounded-lg px-6 data-[state=open]:bg-[#00C7B7]/5 data-[state=open]:border-[#00C7B7]/20 transition-all">
+                <AccordionTrigger className="hover:no-underline font-semibold text-[#2c4964] text-left">Como recebo meus pagamentos?</AccordionTrigger>
+                <AccordionContent className="text-gray-600 text-base pb-4">
+                  O sistema possui integração nativa. Você pode receber via Pix com baixa automática ou cartões de crédito configurando sua conta do Mercado Pago no painel.
                 </AccordionContent>
               </AccordionItem>
             </Accordion>
@@ -225,19 +232,27 @@ const Index = () => {
         </section>
 
         {/* Final CTA */}
-        <section className="py-24 bg-blue-600 text-white text-center relative overflow-hidden">
-          <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-transparent opacity-20"></div>
-          <div className="container">
-            <h2 className="text-4xl md:text-5xl font-bold mb-6 relative z-10">Pronto para começar sua jornada?</h2>
-            <p className="text-xl opacity-90 mb-10 max-w-2xl mx-auto relative z-10">Junte-se a milhares de empreendedores que já estão vendendo online com a Inove Dev SaaS.</p>
-            <Button size="lg" variant="secondary" className="h-14 px-10 text-lg rounded-full shadow-2xl hover:scale-105 transition-transform relative z-10 text-blue-700 font-bold" asChild>
-              <Link to="/loja/demo">Ver Demonstração <ArrowRight className="ml-2 h-5 w-5" /></Link>
+        <section className="py-24 bg-gradient-to-br from-[#0d1b2a] to-[#050a12] text-white text-center relative overflow-hidden">
+          {/* Decorativos */}
+          <div className="absolute top-0 right-0 opacity-25 w-[350px] h-[350px] bg-[radial-gradient(circle,#00C7B7_0%,transparent_70%)] blur-[60px] translate-x-[30%] -translate-y-[30%]"></div>
+          <div className="absolute bottom-0 left-0 opacity-25 w-[300px] h-[300px] bg-[radial-gradient(circle,#007BFF_0%,transparent_70%)] blur-[50px] -translate-x-[30%] translate-y-[30%]"></div>
+
+          <div className="container relative z-10">
+             <span className="badge mb-6 px-4 py-2 rounded-full font-bold border border-white/20 text-white bg-white/5 backdrop-blur-sm inline-block"><Rocket className="inline w-4 h-4 mr-1"/> PLATAFORMA SAAS</span>
+            <h2 className="text-4xl md:text-5xl font-bold mb-6 font-['Montserrat']">Sua loja virtual <span className="text-[#00C7B7]">exclusiva</span>.</h2>
+            <p className="text-xl text-white/70 mb-10 max-w-2xl mx-auto font-light">Assine a Inove SaaS agora e tenha acesso imediato a um ambiente seguro, escalável e pronto para impulsionar suas vendas.</p>
+            <Button size="lg" className="h-14 px-10 text-lg rounded-full bg-[#00C7B7] hover:bg-[#00a699] text-[#050a12] font-bold shadow-[0_8px_25px_rgba(0,199,183,0.3)] transition-all hover:-translate-y-1" asChild>
+              <Link to="/loja/demo">Crie sua Loja Agora <ArrowRight className="ml-2 h-5 w-5" /></Link>
             </Button>
           </div>
         </section>
         
-        <footer className="py-8 border-t text-center text-muted-foreground text-sm">
-          © {new Date().getFullYear()} Inove Dev SaaS. Todos os direitos reservados.
+        <footer className="py-8 bg-[#0D1B2A] border-t border-white/10 text-center text-white/60 text-sm">
+          <div className="container">
+            <div className="font-['Montserrat'] mb-2">
+              &copy; {new Date().getFullYear()} <strong><span className="text-[#00C7B7]">InoveDev</span> SaaS</strong>. Todos os direitos reservados.
+            </div>
+          </div>
         </footer>
       </div>
     );
