@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Eye, ChevronDown, Pencil, Trash2, Save, X } from 'lucide-react';
+import { Eye, ChevronDown, Pencil, Trash2, Save, X, MessageCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -221,6 +221,18 @@ export default function AdminOrdersPage() {
     }
   };
 
+  const handleSendWhatsApp = (order: Order) => {
+    if (!order.customer_phone) {
+      toast.error('Cliente sem telefone cadastrado');
+      return;
+    }
+    const phone = order.customer_phone.replace(/\D/g, '');
+    const statusMsg = statusLabels[order.status] || order.status;
+    const message = `Olá ${order.customer_name}! 👋\n\nSeu pedido *#${order.order_number}* foi atualizado.\n\n📦 Status: *${statusMsg}*\n💰 Total: *${new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(Number(order.total))}*\n\nObrigado por comprar conosco! 🛍️`;
+    const url = `https://wa.me/55${phone}?text=${encodeURIComponent(message)}`;
+    window.open(url, '_blank');
+  };
+
   return (
     <AdminLayout>
       <div className="space-y-6">
@@ -398,6 +410,15 @@ export default function AdminOrdersPage() {
                   <strong>Pagamento:</strong> {paymentLabels[selectedOrder.payment_method]}
                 </p>
               </div>
+
+              {/* WhatsApp Button */}
+              <Button
+                className="w-full bg-green-600 hover:bg-green-700 text-white gap-2"
+                onClick={() => handleSendWhatsApp(selectedOrder)}
+              >
+                <MessageCircle className="h-4 w-4" />
+                Enviar atualização no WhatsApp
+              </Button>
             </div>
           )}
 

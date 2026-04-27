@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { Helmet } from 'react-helmet-async';
 import { useParams, Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { ArrowRight, Truck, CreditCard, MessageCircle, ShieldCheck, ShoppingCart, Minus, Plus, Trash2, CheckCircle, Clock, XCircle, Search, Menu, Heart, Facebook, Instagram, Twitter, Mail, X, Store, Zap, Rocket } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -275,6 +276,14 @@ export default function StorefrontPage() {
 
   return (
     <div className="min-h-screen flex flex-col bg-[#ebebeb]" style={primaryStyle}>
+      <Helmet>
+        <title>{store.name} – Loja Online</title>
+        <meta name="description" content={settings?.banner_subtitle || `Compre online na ${store.name}. Produtos com qualidade e entrega rápida.`} />
+        <meta property="og:title" content={`${store.name} – Loja Online`} />
+        <meta property="og:description" content={settings?.banner_subtitle || `Compre online na ${store.name}.`} />
+        {settings?.banner_image_url && <meta property="og:image" content={settings.banner_image_url} />}
+        <meta name="theme-color" content={settings?.primary_color || '#fff159'} />
+      </Helmet>
       {/* Top Bar */}
       {settings?.whatsapp_number && (
         <div className="bg-gray-900 text-white py-1.5 text-[11px] font-medium hidden sm:block">

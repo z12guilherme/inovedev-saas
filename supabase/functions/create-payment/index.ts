@@ -23,16 +23,39 @@ serve(async (req) => {
     console.log('📦 Payload recebido:', { storeId, orderId, backUrls }); // Debug
 
     // Garantir URLs de retorno válidas para evitar erro "auto_return invalid"
-    let origin = req.headers.get('origin');
-    // Tratar caso onde origin é "null" (comum em chamadas locais) ou vazio
-    if (!origin || origin === 'null') {
-      origin = 'http://localhost:3000';
+    let origin = req.headers.get('origin') || req.headers.get('referer')
+
+    // Tratar casos onde origin é "null", "undefined" ou vazio
+    if (!origin || origin === 'null' || origin === 'undefined') {
+      origin = 'https://saas.inovedev.com.br'; // Domínio de fallback seguro
+    } else {
+      try {
+        origin = new URL(origin).origin
+      } catch (e) {
+        origin = 'https://saas.inovedev.com.br'
+      }
     }
 
     // Função auxiliar para garantir URL válida
-    const getValidUrl = (url: string | undefined, path: string) => {
-      if (url && url.startsWith('http')) return url;
-      return `${origin.replace(/\/$/, '')}${path}`; // Remove barra final do origin se houver
+    const getValidUrl = (url: string | undefined, fallbackPath: string) => {
+      let validUrl = (url && typeof url === 'string' && url.startsWith('http')) ? url : `${origin}${fallbackPath}`;
+
+      try {
+        const parsed = new URL(validUrl);
+        // O Mercado Pago bloqueia qualquer IP local, localhost, ou URLs sem HTTPS em back_urls
+        if (
+          parsed.hostname === 'localhost' ||
+          parsed.hostname === '127.0.0.1' ||
+          parsed.hostname.startsWith('192.168.') ||
+          parsed.protocol === 'http:'
+        ) {
+          validUrl = `https://saas.inovedev.com.br${parsed.pathname}${parsed.search}`;
+        }
+      } catch (e) {
+        validUrl = `https://saas.inovedev.com.br${fallbackPath}`;
+      }
+
+      return validUrl;
     };
 
     const finalBackUrls = {
@@ -40,7 +63,7 @@ serve(async (req) => {
       failure: getValidUrl(backUrls?.failure, '/erro'),
       pending: getValidUrl(backUrls?.pending, '/pendente'),
     };
-    
+
     console.log('🔗 URLs de Retorno:', finalBackUrls); // Debug
 
     // 1. Buscar configurações da loja para obter o Access Token
@@ -57,12 +80,12 @@ serve(async (req) => {
     if (isTestMode) {
       console.log('Modo Simulação Ativado para loja:', storeId);
       const origin = req.headers.get('origin') || 'http://localhost:3000';
-      
+
       // Retorna uma resposta fake que o frontend entende, redirecionando direto para a tela de sucesso
       return new Response(
-        JSON.stringify({ 
-          preferenceId: 'mock_preference_id_123', 
-          initPoint: `${origin}/sucesso?collection_status=approved&payment_id=mock_123&external_reference=${orderId || 'test'}` 
+        JSON.stringify({
+          preferenceId: 'mock_preference_id_123',
+          initPoint: `${origin}/sucesso?collection_status=approved&payment_id=mock_123&external_reference=${orderId || 'test'}`
         }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       )
@@ -72,13 +95,18 @@ serve(async (req) => {
     // 2. Configurar Mercado Pago com o token da loja (Split Payment / Multi-tenant)
     // Construir URL do Webhook apontando para nossa Edge Function com o ID da loja
     const supabaseUrl = Deno.env.get('SUPABASE_URL') ?? '';
-    const notificationUrl = `${supabaseUrl}/functions/v1/mercadopago-webhook?store_id=${storeId}`;
+    let notificationUrl = `${supabaseUrl}/functions/v1/mercadopago-webhook?store_id=${storeId}`;
+
+    // Previne erro similar no webhook se testando com o Supabase CLI (local)
+    if (notificationUrl.includes('localhost') || notificationUrl.includes('127.0.0.1')) {
+      notificationUrl = `https://bxsbbuxaqffajqlhgqnz.supabase.co/functions/v1/mercadopago-webhook?store_id=${storeId}`;
+    }
 
     const preferenceBody = {
       external_reference: orderId,
       payer: payer ? {
         name: payer.name,
-        email: payer.email && payer.email.includes('@') ? payer.email : undefined, // Validação básica de email
+        email: payer.email && payer.email.includes('@') ? payer.email : `cliente.${Date.now()}@teste.com`, // Força e-mail anônimo se vazio
         phone: payer.phone && payer.phone.length >= 10 ? {
           area_code: payer.phone.substring(0, 2),
           number: payer.phone.substring(2)
@@ -96,6 +124,9 @@ serve(async (req) => {
         cost: Number(deliveryFee),
         mode: 'not_specified',
       } : undefined,
+      payment_methods: {
+        default_payment_method_id: 'pix' // Tenta forçar a tela a abrir direto na opção de Pix
+      },
       notification_url: notificationUrl,
       back_urls: finalBackUrls,
       auto_return: 'approved',

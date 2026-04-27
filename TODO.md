@@ -6,17 +6,17 @@ Este documento lista as tarefas necessárias para transformar o protótipo atual
 
 ## 🚀 Próximos Passos Imediatos (Foco: Pagamentos)
 
-- [ ] **Deploy da Edge Function `create-payment`**
+- [x] **Deploy da Edge Function `create-payment`**
     - [x] Função atualizada para suportar "Modo Simulação" (Sandbox Local).
-    - [ ] Realizar deploy atualizado: `npx supabase functions deploy create-payment`.
+    - [x] Realizar deploy atualizado: `npx supabase functions deploy create-payment`. ✅
 
 - [x] **Integração no Frontend (`CartContext`)**
     - Conectar o formulário de checkout para chamar `supabase.functions.invoke('create-payment')`.
     - Redirecionamento para o Mercado Pago implementado.
 
-- [ ] **Webhook de Notificações (`mercadopago-webhook`)**
+- [x] **Webhook de Notificações (`mercadopago-webhook`)**
     - [x] Código criado em `supabase/functions/mercadopago-webhook`.
-    - [ ] **Pendente:** Deploy e configuração de segredos (`MP_ACCESS_TOKEN`).
+    - [x] **Deploy realizado.** ✅
     - [x] **Credenciais:** Chaves de teste obtidas (`APP_USR...`).
     - [ ] **Pendente:** Inserir no Admin e realizar compra de teste.
 
@@ -51,29 +51,31 @@ Estas tarefas são bloqueantes. A loja não funciona dinamicamente sem elas.
 - [ ] **Renderização do Construtor Visual**
     - Ler tabela `store_sections` e renderizar componentes dinamicamente conforme a ordem definida no Admin.
 
-- [ ] **SEO Dinâmico**
-    - Usar `react-helmet-async` para alterar título, descrição e favicon com base nas configurações da loja.
+- [x] **SEO Dinâmico**
+    - Usar `react-helmet-async` para alterar título, descrição e favicon com base nas configurações da loja. ✅
 
 ### Admin Dashboard
-- [ ] **Dashboard Home**
+- [x] **Dashboard Home**
     - Substituir gráficos estáticos por dados reais de `orders` (Vendas hoje, Pedidos pendentes).
 
-- [ ] **Gestão de Pedidos**
+- [x] **Gestão de Pedidos**
     - Tela para visualizar detalhes do pedido e alterar status (Pendente → Enviado → Entregue).
-    - Botão para "Enviar atualização no WhatsApp do cliente".
+    - Botão para "Enviar atualização no WhatsApp do cliente". ✅
 
 ---
 
 ## 2️⃣ Backend & Integrações
 
 ### Supabase & Edge Functions
-- [ ] **Deploy de Edge Functions**
+- [x] **Deploy de Edge Functions**
     - [x] `create-user` (Cadastro de clientes/lojas)
-    - [x] `create-payment` (Checkout Pro)
-    - [ ] `mercadopago-webhook` (Atualização de status)
+    - [x] `create-payment` (Checkout Pro) ✅
+    - [x] `mercadopago-webhook` (Atualização de status) ✅
 
-- [ ] **Webhooks Mercado Pago**
+- [x] **Webhooks Mercado Pago**
     - Receber notificações de pagamento aprovado e atualizar status de pedido na tabela `orders`.
+    - ✅ **Automático:** O `create-payment` já envia `notification_url` dinâmico com o `store_id` correto em cada preferência criada. Não é necessário configurar nada manualmente no painel do Mercado Pago.
+    - [ ] **Pendente:** Inserir token MP real no Admin da loja e realizar compra de teste para validar o fluxo.
 
 ### Checkout
 - [x] **Integração Real Mercado Pago**
@@ -111,8 +113,8 @@ Estas tarefas são bloqueantes. A loja não funciona dinamicamente sem elas.
 - [x] **Página 404 Personalizada**
     - "Loja não encontrada" amigável com link para criar nova loja.
 
-- [ ] **Feedback Visual**
-    - Toasts de erro/sucesso (`sonner`), manter padrão.
+- [x] **Feedback Visual**
+    - Toasts de erro/sucesso (`sonner`), manter padrão. ✅ (já em uso em toda a aplicação)
 
 ---
 
