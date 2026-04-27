@@ -4,6 +4,7 @@ import { Plus, Store, ExternalLink, Search, Trash2, Pencil, DollarSign, Calendar
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
+import { Badge } from '@/components/ui/badge';
 import { Label } from '@/components/ui/label';
 import {
   Table,
@@ -31,6 +32,13 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { AdminLayout } from '@/components/admin/AdminLayout';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
@@ -47,6 +55,7 @@ interface StoreData {
   user_id: string;
   subscription_price?: number;
   due_date?: number;
+  subscription_status?: string;
 }
 
 export default function AdminClientsPage() {
@@ -57,7 +66,7 @@ export default function AdminClientsPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [editingStore, setEditingStore] = useState<StoreData | null>(null);
-  const [formData, setFormData] = useState({ name: '', slug: '', price: '', dueDate: '', password: '' });
+  const [formData, setFormData] = useState({ name: '', slug: '', price: '', dueDate: '', password: '', subscription_status: 'active' });
 
   useEffect(() => {
     if (user && user.email !== 'mguimarcos39@gmail.com') {
@@ -87,7 +96,7 @@ export default function AdminClientsPage() {
     }
   };
 
-  const filteredStores = stores.filter(store => 
+  const filteredStores = stores.filter(store =>
     store.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     store.slug.toLowerCase().includes(searchTerm.toLowerCase())
   );
@@ -121,13 +130,14 @@ export default function AdminClientsPage() {
       slug: store.slug,
       price: store.subscription_price?.toString() || '',
       dueDate: store.due_date?.toString() || '',
-      password: ''
+      password: '',
+      subscription_status: store.subscription_status || 'active'
     });
   };
 
   const handleSaveStore = async () => {
     if (!editingStore) return;
-    
+
     const price = parseFloat(formData.price);
     const dueDate = parseInt(formData.dueDate);
 
@@ -135,7 +145,8 @@ export default function AdminClientsPage() {
       name: formData.name,
       slug: formData.slug,
       subscription_price: isNaN(price) ? null : price,
-      due_date: isNaN(dueDate) ? null : dueDate
+      due_date: isNaN(dueDate) ? null : dueDate,
+      subscription_status: formData.subscription_status
     }).eq('id', editingStore.id);
 
     if (error) {
@@ -182,6 +193,21 @@ export default function AdminClientsPage() {
     }
   };
 
+  const getStatusBadge = (status?: string) => {
+    switch (status) {
+      case 'active':
+        return <Badge className="bg-green-500 hover:bg-green-600">Ativo</Badge>;
+      case 'trial':
+        return <Badge variant="outline" className="text-blue-600 border-blue-600">Em Teste</Badge>;
+      case 'overdue':
+        return <Badge variant="destructive">Atrasado</Badge>;
+      case 'inactive':
+        return <Badge variant="secondary">Inativo</Badge>;
+      default:
+        return <Badge variant="secondary">Desconhecido</Badge>;
+    }
+  };
+
   return (
     <AdminLayout>
       <div className="space-y-6">
@@ -219,6 +245,7 @@ export default function AdminClientsPage() {
                   <TableHead>URL</TableHead>
                   <TableHead>Mensalidade</TableHead>
                   <TableHead>Vencimento</TableHead>
+                  <TableHead>Status</TableHead>
                   <TableHead>Data Cadastro</TableHead>
                   <TableHead className="text-right">Ações</TableHead>
                 </TableRow>
@@ -259,6 +286,9 @@ export default function AdminClientsPage() {
                         {store.due_date ? `Dia ${store.due_date}` : '-'}
                       </TableCell>
                       <TableCell>
+                        {getStatusBadge(store.subscription_status)}
+                      </TableCell>
+                      <TableCell>
                         {format(new Date(store.created_at), "dd/MM/yyyy", { locale: ptBR })}
                       </TableCell>
                       <TableCell className="text-right">
@@ -297,13 +327,13 @@ export default function AdminClientsPage() {
           <div className="space-y-4 py-4">
             <div className="space-y-2">
               <Label htmlFor="name">Nome da Loja</Label>
-              <Input 
-                id="name" 
-                value={formData.name} 
+              <Input
+                id="name"
+                value={formData.name}
                 onChange={(e) => {
                   const newName = e.target.value;
                   setFormData({
-                    ...formData, 
+                    ...formData,
                     name: newName,
                     slug: generateSlug(newName)
                   });
@@ -314,10 +344,10 @@ export default function AdminClientsPage() {
               <Label htmlFor="slug">Endereço (Slug)</Label>
               <div className="flex items-center gap-2">
                 <span className="text-sm text-muted-foreground">/loja/</span>
-                <Input 
-                  id="slug" 
-                  value={formData.slug} 
-                  onChange={(e) => setFormData({...formData, slug: generateSlug(e.target.value)})}
+                <Input
+                  id="slug"
+                  value={formData.slug}
+                  onChange={(e) => setFormData({ ...formData, slug: generateSlug(e.target.value) })}
                 />
               </div>
             </div>
@@ -325,12 +355,12 @@ export default function AdminClientsPage() {
               <Label htmlFor="price">Valor Mensal (R$)</Label>
               <div className="relative">
                 <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input 
-                  id="price" 
-                  className="pl-9" 
-                  type="number" 
-                  value={formData.price} 
-                  onChange={(e) => setFormData({...formData, price: e.target.value})}
+                <Input
+                  id="price"
+                  className="pl-9"
+                  type="number"
+                  value={formData.price}
+                  onChange={(e) => setFormData({ ...formData, price: e.target.value })}
                   placeholder="0.00"
                 />
               </div>
@@ -339,28 +369,46 @@ export default function AdminClientsPage() {
               <Label htmlFor="dueDate">Dia do Vencimento</Label>
               <div className="relative">
                 <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input 
-                  id="dueDate" 
-                  className="pl-9" 
-                  type="number" 
-                  min="1" 
-                  max="31" 
-                  value={formData.dueDate} 
-                  onChange={(e) => setFormData({...formData, dueDate: e.target.value})}
+                <Input
+                  id="dueDate"
+                  className="pl-9"
+                  type="number"
+                  min="1"
+                  max="31"
+                  value={formData.dueDate}
+                  onChange={(e) => setFormData({ ...formData, dueDate: e.target.value })}
                   placeholder="Dia (1-31)"
                 />
               </div>
             </div>
             <div className="space-y-2">
+              <Label htmlFor="status">Status da Assinatura</Label>
+              <Select
+                value={formData.subscription_status}
+                onValueChange={(value) => setFormData({ ...formData, subscription_status: value })}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Selecione o status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="active">Ativo (Acesso Liberado)</SelectItem>
+                  <SelectItem value="trial">Período de Teste (Acesso Liberado)</SelectItem>
+                  <SelectItem value="overdue">Atrasado (Bloqueado)</SelectItem>
+                  <SelectItem value="inactive">Inativo / Cancelado (Bloqueado)</SelectItem>
+                </SelectContent>
+              </Select>
+              <p className="text-xs text-muted-foreground">O status inativo ou atrasado bloqueará o acesso do cliente ao painel.</p>
+            </div>
+            <div className="space-y-2">
               <Label htmlFor="password">Nova Senha (Opcional)</Label>
               <div className="relative">
                 <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input 
-                  id="password" 
-                  className="pl-9" 
-                  type="text" 
-                  value={formData.password} 
-                  onChange={(e) => setFormData({...formData, password: e.target.value})}
+                <Input
+                  id="password"
+                  className="pl-9"
+                  type="text"
+                  value={formData.password}
+                  onChange={(e) => setFormData({ ...formData, password: e.target.value })}
                   placeholder="Digite para alterar a senha"
                 />
               </div>
