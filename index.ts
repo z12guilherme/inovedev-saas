@@ -23,6 +23,7 @@ serve(async (req) => {
     // O Mercado Pago pode enviar o ID na query string ou no corpo
     const topic = url.searchParams.get('topic') || url.searchParams.get('type')
     const id = url.searchParams.get('id') || url.searchParams.get('data.id')
+    const storeId = url.searchParams.get('store_id') // Presente apenas nos pagamentos de lojas (Checkout)
 
     const body = await req.json().catch(() => ({}))
     const paymentId = body.data?.id || id
@@ -32,10 +33,26 @@ serve(async (req) => {
     if (type === 'payment' && paymentId) {
       console.log(`Processing payment notification: ${paymentId}`)
 
+      // Inteligência Multi-tenant: Decide qual token usar
+      let accessToken = Deno.env.get('MP_ACCESS_TOKEN'); // Token do dono do SaaS (para assinaturas)
+
+      if (storeId) {
+        // É pagamento de cliente final na loja, precisamos do token da loja!
+        const { data: settings } = await supabase
+          .from('store_settings')
+          .select('mercadopago_access_token')
+          .eq('store_id', storeId)
+          .single()
+
+        if (settings?.mercadopago_access_token) {
+          accessToken = settings.mercadopago_access_token
+        }
+      }
+
       // Consultar a API do Mercado Pago para confirmar o status atual
       const mpResponse = await fetch(`https://api.mercadopago.com/v1/payments/${paymentId}`, {
         headers: {
-          'Authorization': `Bearer ${Deno.env.get('MP_ACCESS_TOKEN')}`
+          'Authorization': `Bearer ${accessToken}`
         }
       })
 
@@ -52,13 +69,28 @@ serve(async (req) => {
         else if (status === 'rejected' || status === 'cancelled') newStatus = 'cancelled'
 
         if (externalReference && newStatus) {
-          const { error } = await supabase
-            .from('orders')
-            .update({ status: newStatus })
-            .eq('id', externalReference)
-          
-          if (error) console.error('Error updating order:', error)
-          else console.log(`Order ${externalReference} updated to ${newStatus}`)
+          // Diferenciar Assinatura do SaaS vs Pedido de Loja
+          if (externalReference.startsWith('SAAS_SUB_')) {
+            const subStoreId = externalReference.replace('SAAS_SUB_', '');
+            let subStatus = newStatus === 'confirmed' ? 'active' : 'inactive';
+
+            const { error } = await supabase
+              .from('stores')
+              .update({ subscription_status: subStatus })
+              .eq('id', subStoreId)
+
+            if (error) console.error('Error updating store subscription:', error)
+            else console.log(`Store ${subStoreId} subscription updated to ${subStatus}`)
+          } else {
+            // É um pedido normal de loja
+            const { error } = await supabase
+              .from('orders')
+              .update({ status: newStatus })
+              .eq('id', externalReference)
+
+            if (error) console.error('Error updating order:', error)
+            else console.log(`Order ${externalReference} updated to ${newStatus}`)
+          }
         }
       }
     }

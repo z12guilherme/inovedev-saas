@@ -33,7 +33,7 @@ serve(async (req) => {
             },
             back_url: `${origin}/admin`,
             payer_email: email || "lojista@inovedev.com.br",
-            external_reference: storeId // Importante: para identificarmos a loja que pagou no futuro
+            external_reference: `SAAS_SUB_${storeId}` // Prefixo para o webhook diferenciar de um pedido normal
         };
 
         const mpResponse = await fetch('https://api.mercadopago.com/preapproval', {
