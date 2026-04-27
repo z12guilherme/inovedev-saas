@@ -124,9 +124,6 @@ serve(async (req) => {
         cost: Number(deliveryFee),
         mode: 'not_specified',
       } : undefined,
-      payment_methods: {
-        default_payment_method_id: 'pix' // Tenta forçar a tela a abrir direto na opção de Pix
-      },
       notification_url: notificationUrl,
       back_urls: finalBackUrls,
       auto_return: 'approved',

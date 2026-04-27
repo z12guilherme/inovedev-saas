@@ -18,7 +18,7 @@ Este documento lista as tarefas necessárias para transformar o protótipo atual
     - [x] Código criado em `supabase/functions/mercadopago-webhook`.
     - [x] **Deploy realizado.** ✅
     - [x] **Credenciais:** Chaves de teste obtidas (`APP_USR...`).
-    - [ ] **Pendente:** Inserir no Admin e realizar compra de teste.
+    - [x] **Pendente:** Inserir no Admin e realizar compra de teste. ✅
 
 ---
 
@@ -75,7 +75,7 @@ Estas tarefas são bloqueantes. A loja não funciona dinamicamente sem elas.
 - [x] **Webhooks Mercado Pago**
     - Receber notificações de pagamento aprovado e atualizar status de pedido na tabela `orders`.
     - ✅ **Automático:** O `create-payment` já envia `notification_url` dinâmico com o `store_id` correto em cada preferência criada. Não é necessário configurar nada manualmente no painel do Mercado Pago.
-    - [ ] **Pendente:** Inserir token MP real no Admin da loja e realizar compra de teste para validar o fluxo.
+    - [x] **Pendente:** Inserir token MP real no Admin da loja e realizar compra de teste para validar o fluxo. ✅
 
 ### Checkout
 - [x] **Integração Real Mercado Pago**
